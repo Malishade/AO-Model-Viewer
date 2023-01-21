@@ -1,0 +1,38 @@
+.the-uxml-listview {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(41, 57, 74);
+    opacity: 1;
+    display: flex;
+    border-color: rgb(25, 25, 25);
+    border-width: 2px;
+    border-radius: 0;
+    transition-duration: 2s, 0s;
+    transition-delay: 2s, 0s;
+}
+
+.the-uxml-listview .unity-scroller--vertical .unity-base-slider__dragger {
+    align-self: center;
+    background-color: rgb(255, 241, 171);
+}
+
+.the-uxml-listview .unity-scroller--vertical .unity-base-slider__tracker {
+    background-color: rgb(41, 57, 74);
+    border-color: rgb(25, 25, 25);
+}
+
+.the-uxml-listview .unity-scroller--vertical .unity-base-slider__dragger-border {
+    background-color: rgb(41, 57, 74);
+    border-color: rgb(25, 25, 25);
+}
+
+.the-uxml-listview .unity-scroller--vertical .unity-scroller__high-button {
+    background-color: rgb(255, 241, 171);
+    border-color: rgb(25, 25, 25);
+}
+
+.the-uxml-listview .unity-scroller--vertical .unity-scroller__low-button {
+    background-color: rgb(255, 241, 171);
+    border-color: rgb(25, 25, 25);
+}

@@ -1,0 +1,4 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/UI/MainView.uss?fileID=7433441132597879392&amp;guid=424f3583ab8b1be42ba84e5341a562db&amp;type=3#MainView" />
+    <ui:ListView name="ListView" class="the-uxml-listview" style="align-items: flex-start; justify-content: space-between; min-width: 0; opacity: 1; max-width: none; width: 450px;" />
+</ui:UXML>
