@@ -1,8 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/UI/MainView.uss?fileID=7433441132597879392&amp;guid=424f3583ab8b1be42ba84e5341a562db&amp;type=3#MainView" />
-    <ui:GroupBox style="max-width: 400px; margin-left: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; padding-left: 0; padding-bottom: 0; padding-top: 0;">
-        <ui:Button text="File" display-tooltip-when-elided="true" name="FileMenu" style="width: 100px;" />
-        <ui:DropdownField label="Resource" index="0" name="ResourceTypeSelector" />
-        <ui:ListView name="ListView" class="the-uxml-listview" style="align-items: flex-start; justify-content: space-between; min-width: 0; opacity: 1; max-width: none; width: auto; display: flex;" />
+    <ui:GroupBox style="flex-direction: row;">
+        <ui:GroupBox style="max-width: 400px; margin-left: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; padding-left: 0; padding-bottom: 0; padding-top: 0; flex-direction: column; height: 878px; width: 319px;">
+            <ui:Button text="File" display-tooltip-when-elided="true" name="FileMenu" style="width: 100px;" />
+            <ui:DropdownField label="Resource" index="0" name="ResourceTypeSelector" />
+            <ui:ListView name="ListView" class="the-uxml-listview" style="align-items: flex-start; justify-content: space-between; min-width: 0; opacity: 1; max-width: none; width: 315px; display: flex; height: 798px;" />
+        </ui:GroupBox>
+        <ui:Image name="RenderViewport" style="flex-direction: row; justify-content: space-between; align-items: center; height: 100%; width: 100%; background-image: url(&apos;project://database/Assets/Materials/New%20Render%20Texture.renderTexture?fileID=8400000&amp;guid=52bc14e4876a8944aa14e24659bbd43b&amp;type=2#New Render Texture&apos;);" />
     </ui:GroupBox>
 </ui:UXML>

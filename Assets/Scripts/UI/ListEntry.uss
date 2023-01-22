@@ -9,7 +9,7 @@
     height: 41px;
 }
 
-#character-name {
+#DisplayName {
     -unity-font-style: bold;
     font-size: 12px;
     color: rgb(255, 241, 171);

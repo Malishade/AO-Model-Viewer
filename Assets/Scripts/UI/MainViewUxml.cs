@@ -1,11 +1,11 @@
 using AODB;
 using ContextualMenuPlayer;
 using SFB;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static RDBLoader;
 using ContextualMenuManager = ContextualMenuPlayer.ContextualMenuManager;
 using ContextualMenuManipulator = ContextualMenuPlayer.ContextualMenuManipulator;
 
@@ -18,6 +18,8 @@ public class MainViewUxml
     private DropdownMenu _fileDropdownMenu;
     private ListView _listView;
     private ModelViewer _modelViewer;
+    private Camera _renderCamera;
+    private Image _imageView;
 
     private Dictionary<string, ResourceType> _resourceTypeChoices = new()
     {
@@ -33,21 +35,37 @@ public class MainViewUxml
         Characters
     }
 
-    public MainViewUxml(VisualElement root, VisualTreeAsset listViewEntryTemplate, ModelViewer modelViewer)
+    public MainViewUxml(VisualElement root, VisualTreeAsset listViewEntryTemplate, ModelViewer modelViewer, Camera renderCamera)
     {
         _settings = SettingsManager.Instance.Settings;
 
         _root = root;
         _menuManager = new ContextualMenuManager();
         _modelViewer = modelViewer;
+        _renderCamera = renderCamera;
 
         root.AddManipulator(new ContextualMenuManipulator());
 
+        InitRenderViewport(root, renderCamera);
         InitListView(root, listViewEntryTemplate);
         InitTypeDropdown(root);
         InitFileMenu(root);
 
         FixScrollSpeed();
+    }
+
+    private void InitRenderViewport(VisualElement root, Camera renderCamera)
+    {
+        _imageView = root.Q<Image>("RenderViewport");
+        _imageView.RegisterCallback<GeometryChangedEvent>(WindowSizeChange);
+    }
+
+    private void WindowSizeChange(GeometryChangedEvent evt)
+    {
+        _renderCamera.targetTexture.Release();
+        _renderCamera.targetTexture.width = (int)_imageView.layout.width;
+        _renderCamera.targetTexture.height = (int)_imageView.layout.height;
+        _renderCamera.targetTexture.Create();
     }
 
     private void InitListView(VisualElement root, VisualTreeAsset listViewEntryTemplate)
