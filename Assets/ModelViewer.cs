@@ -7,7 +7,6 @@ public class ModelViewer : MonoBehaviour
 {
     public Camera Camera;
     public GameObject PivotPoint;
-    public RDBLoader RdbLoader;
     public GameObject CurrentModel;
     [SerializeField] private float _offset = 1f;
 

@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/UI/ListEntry.uss?fileID=7433441132597879392&amp;guid=df4b32f31753a8b4097868c660a55669&amp;type=3#ListEntry" />
     <ui:VisualElement name="list-entry" class="unity-list-viewitem">
-        <ui:Label text="Label" display-tooltip-when-elided="true" name="character-name" style="justify-content: center; align-items: flex-start;" />
+        <ui:Label text="Label" display-tooltip-when-elided="true" name="DisplayName" style="justify-content: center; align-items: flex-start;" />
     </ui:VisualElement>
 </ui:UXML>

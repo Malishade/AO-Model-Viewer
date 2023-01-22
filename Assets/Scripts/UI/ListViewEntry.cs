@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
-using static RDBLoader;
 
 public class ListViewEntry
 {
@@ -11,12 +10,12 @@ public class ListViewEntry
 
     public void SetVisualElement(VisualElement visualElement)
     {
-        m_NameLabel = visualElement.Q<Label>("character-name");
+        m_NameLabel = visualElement.Q<Label>("DisplayName");
     }
 
-    public void Init(RdbData rdbData)
+    public void Init(MainViewUxml.ListViewDataModel listViewData)
     {
-        m_NameLabel.text = rdbData.MeshName;
+        m_NameLabel.text = listViewData.Name;
     }
 }
 

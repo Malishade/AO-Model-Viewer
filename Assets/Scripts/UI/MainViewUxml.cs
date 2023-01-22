@@ -1,23 +1,22 @@
-using System;
-using System.Collections;
+using AODB;
+using ContextualMenuPlayer;
+using SFB;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static RDBLoader;
-using ContextualMenuPlayer;
 using ContextualMenuManager = ContextualMenuPlayer.ContextualMenuManager;
 using ContextualMenuManipulator = ContextualMenuPlayer.ContextualMenuManipulator;
 
 public class MainViewUxml
 {
+    private Settings _settings;
     private VisualElement _root;
     private ContextualMenuManager _menuManager;
+    private DropdownField _resourceTypeDropdown;
     private DropdownMenu _fileDropdownMenu;
     private ListView _listView;
-    private DropdownField _fileDropdownField;
-    private VisualTreeAsset _listViewEntryTemplate;
     private ModelViewer _modelViewer;
 
     private Dictionary<string, ResourceType> _resourceTypeChoices = new()
@@ -36,34 +35,51 @@ public class MainViewUxml
 
     public MainViewUxml(VisualElement root, VisualTreeAsset listViewEntryTemplate, ModelViewer modelViewer)
     {
+        _settings = SettingsManager.Instance.Settings;
+
         _root = root;
         _menuManager = new ContextualMenuManager();
-
-        _listView = root.Q<ListView>();
-        _listViewEntryTemplate = listViewEntryTemplate;
         _modelViewer = modelViewer;
 
         root.AddManipulator(new ContextualMenuManipulator());
 
+        InitListView(root, listViewEntryTemplate);
         InitTypeDropdown(root);
         InitFileMenu(root);
 
-        EnumerateAllElements();
         FixScrollSpeed();
+    }
+
+    private void InitListView(VisualElement root, VisualTreeAsset listViewEntryTemplate)
+    {
+        _listView = root.Q<ListView>();
+        _listView.horizontalScrollingEnabled = false;
+        _listView.selectionType = SelectionType.Single;
+        _listView.onSelectionChange += OnEntryClicked;
+        _listView.makeItem = () =>
+        {
+            var newListEntry = listViewEntryTemplate.Instantiate();
+            var newListEntryLogic = new ListViewEntry();
+            newListEntry.userData = newListEntryLogic;
+            newListEntryLogic.SetVisualElement(newListEntry);
+
+            return newListEntry;
+        };
     }
 
     private void InitTypeDropdown(VisualElement root)
     {
-        DropdownField dropdown = root.Q<DropdownField>("ResourceTypeSelector");
+        _resourceTypeDropdown = root.Q<DropdownField>("ResourceTypeSelector");
 
-        dropdown.choices = _resourceTypeChoices.Keys.ToList();
-        dropdown.index = 0;
-        dropdown.RegisterValueChangedCallback(ResourceTypeChanged);
+        _resourceTypeDropdown.choices = _resourceTypeChoices.Keys.ToList();
+        _resourceTypeDropdown.index = 0;
+        _resourceTypeDropdown.RegisterValueChangedCallback(ResourceTypeChanged);
     }
 
     private void ResourceTypeChanged(ChangeEvent<string> e)
     {
         Debug.Log($"ResourceTypeChanged: {_resourceTypeChoices[e.newValue]}");
+        PopulateListView(_resourceTypeChoices[e.newValue]);
     }
 
     private void InitFileMenu(VisualElement root)
@@ -73,10 +89,21 @@ public class MainViewUxml
         button.RegisterCallback<ClickEvent>(ExpandFileMenu);
 
         _fileDropdownMenu = new();
-        _fileDropdownMenu.AppendAction("Set AO Directory", OpenClicked, DropdownMenuAction.AlwaysEnabled);
-        _fileDropdownMenu.AppendAction("Load Resource Database", LoadClicked, (e) => Settings.AODirectory == string.Empty ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal);
+        _fileDropdownMenu.AppendAction("Set AO Directory", SetAODirectoryClicked, DropdownMenuAction.AlwaysEnabled);
+        _fileDropdownMenu.AppendAction("Load Resource Database", LoadClicked, LoadStatusCallback);
         _fileDropdownMenu.AppendSeparator();
+        _fileDropdownMenu.AppendAction($"Close Database", CloseClicked, CloseStatusCallback);
         _fileDropdownMenu.AppendAction($"Exit", ExitClicked, DropdownMenuAction.AlwaysEnabled);
+    }
+
+    private DropdownMenuAction.Status LoadStatusCallback(DropdownMenuAction e)
+    {
+        return _settings.AODirectory == null || RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
+    }
+
+    private DropdownMenuAction.Status CloseStatusCallback(DropdownMenuAction e)
+    {
+        return RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
     }
 
     private void ExpandFileMenu(ClickEvent clickEvent)
@@ -95,19 +122,35 @@ public class MainViewUxml
         _menuManager.DisplayMenu(creationContext);
     }
 
-    private void OpenClicked(DropdownMenuAction action)
+    private void SetAODirectoryClicked(DropdownMenuAction action)
     {
-        Debug.Log("Open!");
-        Settings.AODirectory = "Derp";
+        StandaloneFileBrowser.OpenFolderPanelAsync("Locate the Anarchy Online Folder", null, false, (paths) =>
+        {
+            if (paths.Length == 0)
+                return;
+
+            _settings.AODirectory = paths.First();
+            SettingsManager.Instance.Save();
+            Debug.Log($"Set AO Directory to {paths.First()}");
+        });
     }
 
     private void LoadClicked(DropdownMenuAction action)
     {
         Debug.Log("Load!");
+        RDBLoader.Instance.OpenDatabase();
+        PopulateListView((ResourceType)_resourceTypeDropdown.index);
+    }
+
+    private void CloseClicked(DropdownMenuAction action)
+    {
+        RDBLoader.Instance.CloseDatabase();
+        Debug.Log("Close!");
     }
 
     private void ExitClicked(DropdownMenuAction action)
     {
+        RDBLoader.Instance.CloseDatabase();
         Debug.Log("Exit!");
     }
 
@@ -125,34 +168,42 @@ public class MainViewUxml
 
     private void OnEntryClicked(IEnumerable<object> obj)
     {
-        var selectedEntry = _listView.selectedItem as RdbData;
-        var newModel = _modelViewer.RdbLoader.CreateAbiffMesh(selectedEntry.MeshId);
+        var selectedEntry = _listView.selectedItem as ListViewDataModel;
 
-       _modelViewer.UpdateModel(newModel);
+        if (selectedEntry.ResourceType == ResourceType.Models)
+        {
+            var newModel = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
+            _modelViewer.UpdateModel(newModel);
+        }
     }
 
-    private void EnumerateAllElements()
+    private void PopulateListView(ResourceType resourceType)
     {
-        _listView.makeItem = () =>
+        //_listView.itemsSource = null;
+        List<ListViewDataModel> listViewData = null;
+
+        if (resourceType == ResourceType.Models)
         {
-            var newListEntry = _listViewEntryTemplate.Instantiate();
-            var newListEntryLogic = new ListViewEntry();
-            newListEntry.userData = newListEntryLogic;
-            newListEntryLogic.SetVisualElement(newListEntry);
+            listViewData = RDBLoader.Instance.Names[(int)ResourceTypeId.RdbMesh].Select(x => new ListViewDataModel { Id = (uint)x.Key, Name = x.Value, ResourceType = ResourceType.Models }).ToList();
 
-            return newListEntry;
-        };
+        }
+        else
+        {
+            return;
+        }
 
-        List<RdbData> rdbData = _modelViewer.RdbLoader.LoadNames();
+        _listView.itemsSource = listViewData;
 
         _listView.bindItem = (item, index) =>
         {
-            (item.userData as ListViewEntry).Init(rdbData[index]);
+            (item.userData as ListViewEntry).Init(listViewData[index]);
         };
+    }
 
-        _listView.horizontalScrollingEnabled = false;
-        _listView.selectionType = SelectionType.Single;
-        _listView.onSelectionChange += OnEntryClicked;
-        _listView.itemsSource = rdbData;
+    public class ListViewDataModel
+    {
+        public string Name;
+        public uint Id;
+        public ResourceType ResourceType;
     }
 }

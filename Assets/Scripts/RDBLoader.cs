@@ -8,16 +8,37 @@ using UnityEditor;
 using UnityEngine;
 using static AODB.DbClasses.RDBMesh_t;
 
-public class RDBLoader : MonoBehaviour
+[CreateAssetMenu]
+public class RDBLoader : ScriptableSingleton<RDBLoader>
 {
-    private string _aopath = @"D:\Anarchy Online";
+    public Dictionary<int, Dictionary<int, string>> Names = null;
+    public bool IsOpen => _rdbController != null;
+
+    private Settings _settings;
     private RdbController _rdbController;
 
-    public List<RdbData> LoadNames()
+    protected override void OnInitialize()
     {
-        _rdbController = new RdbController(_aopath);
-        var RDBNames = _rdbController.Get<InfoObject>(1).Types;
-        return RDBNames[1010001].Select(x => new RdbData { MeshId = (uint)x.Key, MeshName = x.Value }).ToList();
+        _settings = SettingsManager.Instance.Settings;
+    }
+
+    public void OpenDatabase()
+    {
+        if (_rdbController != null)
+            return;
+
+        _rdbController = new RdbController(_settings.AODirectory);
+
+        if(Names == null)
+            Names = _rdbController.Get<InfoObject>(1).Types;
+    }
+
+    public void CloseDatabase()
+    {
+        if (_rdbController == null)
+            return;
+
+        _rdbController.Dispose();
     }
 
     public List<GameObject> CreateAbiffMesh(uint meshId)
@@ -63,11 +84,5 @@ public class RDBLoader : MonoBehaviour
         mat.mainTexture = tex;
 
         return mat;
-    }
-
-    public class RdbData
-    {
-        public string MeshName;
-        public uint MeshId;
     }
 }
