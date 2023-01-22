@@ -10,7 +10,7 @@ using static AODB.DbClasses.RDBMesh_t;
 
 public class RDBLoader : MonoBehaviour
 {
-    private string _aopath = @"C:\Program Files\Funcom\Anarchy Online";
+    private string _aopath = @"D:\Anarchy Online";
     private RdbController _rdbController;
 
     public List<RdbData> LoadNames()
@@ -41,9 +41,8 @@ public class RDBLoader : MonoBehaviour
                 uv = mesh.Vertices.Select(x => new Vector2(x.uvs.X, -x.uvs.Y)).ToArray(),
             };
 
-            Material mat = LoadMaterial(mesh.Material.Texture);
-
-            submeshObj.AddComponent<MeshRenderer>().material = mat;
+            if (mesh.Material != null)
+                submeshObj.AddComponent<MeshRenderer>().material = LoadMaterial(mesh.Material.Texture);
 
             submeshObj.transform.position = mesh.BasePos.ToUnity();
             submeshObj.transform.rotation = mesh.BaseRotation.ToUnity();
