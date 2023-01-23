@@ -35,7 +35,7 @@ public class MainViewUxml
         Characters
     }
 
-    public MainViewUxml(VisualElement root, VisualTreeAsset listViewEntryTemplate, ModelViewer modelViewer, Camera renderCamera)
+    public MainViewUxml(VisualElement root, ModelViewer modelViewer, Camera renderCamera)
     {
         _settings = SettingsManager.Instance.Settings;
 
@@ -47,7 +47,7 @@ public class MainViewUxml
         root.AddManipulator(new ContextualMenuManipulator());
 
         InitRenderViewport(root, renderCamera);
-        InitListView(root, listViewEntryTemplate);
+        InitListView(root);
         InitTypeDropdown(root);
         InitFileMenu(root);
 
@@ -56,7 +56,7 @@ public class MainViewUxml
 
     private void InitRenderViewport(VisualElement root, Camera renderCamera)
     {
-        _imageView = root.Q<Image>("RenderViewport");
+        _imageView = root.Q<Image>("RightContainer");
         _imageView.RegisterCallback<GeometryChangedEvent>(WindowSizeChange);
     }
 
@@ -68,18 +68,18 @@ public class MainViewUxml
         _renderCamera.targetTexture.Create();
     }
 
-    private void InitListView(VisualElement root, VisualTreeAsset listViewEntryTemplate)
+    private void InitListView(VisualElement root)
     {
         _listView = root.Q<ListView>();
-        _listView.horizontalScrollingEnabled = false;
+        _listView.Q<VisualElement>("unity-dragger").style.minHeight = 14;
+        _listView.fixedItemHeight = 18;
+        _listView.showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly;
         _listView.selectionType = SelectionType.Single;
         _listView.onSelectionChange += OnEntryClicked;
         _listView.makeItem = () =>
         {
-            var newListEntry = listViewEntryTemplate.Instantiate();
-            var newListEntryLogic = new ListViewEntry();
-            newListEntry.userData = newListEntryLogic;
-            newListEntryLogic.SetVisualElement(newListEntry);
+            Label newListEntry = new Label();
+            newListEntry.userData = newListEntry;
 
             return newListEntry;
         };
@@ -88,7 +88,6 @@ public class MainViewUxml
     private void InitTypeDropdown(VisualElement root)
     {
         _resourceTypeDropdown = root.Q<DropdownField>("ResourceTypeSelector");
-
         _resourceTypeDropdown.choices = _resourceTypeChoices.Keys.ToList();
         _resourceTypeDropdown.index = 0;
         _resourceTypeDropdown.RegisterValueChangedCallback(ResourceTypeChanged);
@@ -107,6 +106,7 @@ public class MainViewUxml
         button.RegisterCallback<ClickEvent>(ExpandFileMenu);
 
         _fileDropdownMenu = new();
+
         _fileDropdownMenu.AppendAction("Set AO Directory", SetAODirectoryClicked, DropdownMenuAction.AlwaysEnabled);
         _fileDropdownMenu.AppendAction("Load Resource Database", LoadClicked, LoadStatusCallback);
         _fileDropdownMenu.AppendSeparator();
@@ -214,7 +214,7 @@ public class MainViewUxml
 
         _listView.bindItem = (item, index) =>
         {
-            (item.userData as ListViewEntry).Init(listViewData[index]);
+            (item.userData as Label).text = listViewData[index].Name;
         };
     }
 

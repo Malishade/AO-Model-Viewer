@@ -1,40 +1,168 @@
-.the-uxml-listview {
-    flex-grow: 1;
-    align-items: center;
-    justify-content: center;
-    background-color: rgb(41, 57, 74);
-    opacity: 1;
-    display: flex;
-    border-color: rgb(25, 25, 25);
-    border-width: 2px;
-    border-radius: 0;
-    transition-duration: 2s, 0s;
-    transition-delay: 2s, 0s;
+:root {
+  --gray225: rgb(225, 225, 225);
+  --gray188: rgb(188, 188, 188);
+  --gray125: rgba(125, 125, 125, 0.5);
+
+  --gray76: rgb(76, 76, 76);
+  --gray66: rgb(66, 66, 66);
+
+  --gray56: rgb(56, 56, 56);
+  --gray46: rgb(46, 46, 46);
+  --gray42: rgb(42, 42, 42);
+  --gray33: rgb(33, 33, 33);
+  --gray13: rgb(13, 13, 13);
+  --lime: rgba(145, 231, 29, 0.5);
+  --light-lime: rgb(199, 243, 139);
 }
 
-.the-uxml-listview .unity-scroller--vertical .unity-base-slider__dragger {
-    align-self: center;
-    background-color: rgb(255, 241, 171);
+.unity-list-view{
+    background-color: var(--gray42);
+    border-top-color: var(--gray33);
+    border-left-color: var(--gray33);
+    border-right-color: var(--gray33);
+    border-bottom-color: var(--gray33);
+    border-radius: 0px;
+    border-width: 1px;
+    color: var(--gray188);
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 0px;
 }
 
-.the-uxml-listview .unity-scroller--vertical .unity-base-slider__tracker {
-    background-color: rgb(41, 57, 74);
-    border-color: rgb(25, 25, 25);
+.unity-collection-view__item--alternative-background
+{
+    background-color: var(--gray46);
 }
 
-.the-uxml-listview .unity-scroller--vertical .unity-base-slider__dragger-border {
-    background-color: rgb(41, 57, 74);
-    border-color: rgb(25, 25, 25);
+.unity-base-text-field__input:focus {
+    border-color: var(--lime);
 }
 
-.the-uxml-listview .unity-scroller--vertical .unity-scroller__high-button {
-    background-color: rgb(255, 241, 171);
-    border-color: rgb(25, 25, 25);
+.unity-scroller--vertical .unity-base-slider__dragger {
+    background-color: var(--gray188);
+    border-radius: 3px;
 }
 
-.the-uxml-listview .unity-scroller--vertical .unity-scroller__low-button {
-    background-color: rgb(255, 241, 171);
-    border-color: rgb(25, 25, 25);
+.unity-base-slider:focus .unity-base-slider__dragger {
+    border-color: var(--gray33);
+    background-color: var(--lime);
+}
+
+.unity-scroller--vertical .unity-base-slider__tracker {
+    background-color: var(--gray42);
+    border-color: var(--gray33);
+}
+
+.unity-scroller--vertical .unity-scroller__high-button {
+    background-color:var(--gray188);
+    border-color: var(--gray33);
+    height: 0px;
+}
+
+.unity-scroller--vertical .unity-scroller__low-button {
+    background-color: var(--gray188);
+    border-color: var(--gray33);
+    height: 0px;
+}
+
+.unity-scroller__slider
+{
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
+.unity-label {
+    color: var(--gray188);
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 0px;
+}
+
+.unity-base-text-field__input {
+    background-color: var(--gray76);
+    color: var(--gray188);
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 0px;
+    border-top-color: var(--gray13);
+    border-left-color: var(--gray33);
+    border-right-color: var(--gray33);
+    border-bottom-color: var(--gray33);
+    border-radius: 3px;
+}
+
+.unity-base-popup-field__input {
+    background-color: var(--gray76);
+    color: var(--gray188);
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 0px;
+    border-top-color: var(--gray13);
+    border-left-color: var(--gray33);
+    border-right-color: var(--gray33);
+    border-bottom-color: var(--gray33);
+    border-radius: 3px;
+}
+
+.unity-button {
+    color: var(--gray188);
+    background-color: var(--gray76);
+    border-top-color: var(--gray13);
+    border-left-color: var(--gray33);
+    border-right-color: var(--gray33);
+    border-bottom-color: var(--gray33);
+    border-radius: 0px;
+}
+
+.unity-button:hover {
+    color: var(--light-lime);
+    background-color: var(--lime);
+}
+
+.unity-button:focus {
+    color: var(--light-lime);
+    background-color: var(--lime);
+}
+
+.unity-scroll-view__content-container {
+    color: var(--gray188);
+    width: 289px;
+    height: 16px;
+}
+
+.unity-list-view__item:{
+    font-size: 12px;
+    padding-top: 1px;
+}
+
+.unity-list-view__item:hover {
+    color: var(--gray225);
+    background-color: var(--gray125);
+}
+
+.unity-list-view__item:checked {
+    color: var(--light-lime);
+    background-color: var(--lime);
 }
 
 .unity-popup-field {
@@ -45,4 +173,57 @@
 
 .unity-base-popup-field__arrow {
     display: none;
+}
+
+#MainContainer {
+    background-color: var(--gray56);
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+    padding-top: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 5px;
+}
+
+#HorizontalSplitter {
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+}
+#HorizontalSplitter {
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+}
+
+#SearchBarContainer {
+    border-left-color: var(--gray33);
+    border-right-color: var(--gray33);
+    border-bottom-color: var(--gray33);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+}
+
+#ResourceTypeContainer {
+    border-left-color: var(--gray33);
+    border-right-color: var(--gray33);
+    border-top-color: var(--gray33);
+
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+
 }
