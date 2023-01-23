@@ -6,47 +6,45 @@ using UnityEngine;
 public class ModelViewer : MonoBehaviour
 {
     public Camera Camera;
-    public GameObject PivotPoint;
     public GameObject CurrentModel;
+    public PivotController PivotController;
     [SerializeField] private float _offset = 1f;
 
     public void UpdateModel(List<GameObject> meshes)
     {
-        DestroyOldModel();
-        SetupNewModel(meshes);
-        UpdateCameraPosition();
+        Bounds newBounds = meshes.GetMeshBounds();
+
+        SetupNewModel(meshes, newBounds);
+        UpdateParents(newBounds);
+        UpdateCameraPosition(newBounds);
     }
 
-    private void SetupNewModel(List<GameObject> meshes)
+    private void SetupNewModel(List<GameObject> meshes, Bounds bounds)
     {
+        if (CurrentModel != null)
+            DestroyImmediate(CurrentModel);
+
+        CurrentModel = new GameObject();
+        CurrentModel.transform.position = bounds.center;
+
         foreach (var mesh in meshes)
         {
             mesh.transform.SetParent(CurrentModel.transform);
         }
+    }
 
-        UpdatePivotPosition();
+    private void UpdateParents(Bounds bounds)
+    {   
+        PivotController.ResetRotation();
+        PivotController.ResetPosition(bounds.center);
 
-        CurrentModel.transform.SetParent(PivotPoint.transform);
+        CurrentModel.transform.SetParent(PivotController.transform);
         CurrentModel.transform.Rotate(Vector3.up, 180);
     }
 
-    private void DestroyOldModel()
-    {
-        if (CurrentModel != null)
-            DestroyImmediate(CurrentModel);
-      
-        CurrentModel = new GameObject();
-    }
 
-    private void UpdatePivotPosition()
+    private void UpdateCameraPosition(Bounds bounds)
     {
-        PivotPoint.transform.position = CurrentModel.transform.GetMeshBounds().center;
-    }
-
-    private void UpdateCameraPosition()
-    {
-        Bounds bounds = CurrentModel.transform.GetMeshBounds();
-
         float cameraDistance = _offset;
         Vector3 objectSizes = bounds.max - bounds.min;
         float objectSize = Mathf.Max(objectSizes.x, objectSizes.y, objectSizes.z);

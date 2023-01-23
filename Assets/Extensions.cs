@@ -5,13 +5,16 @@ using UnityEngine;
 
 public static class Extensions
 {
-    public static Bounds GetMeshBounds(this Transform transform)
+    public static Bounds GetMeshBounds(this List<GameObject> gameObjects)
     {
         Bounds bounds = new Bounds();
 
-        foreach (MeshRenderer child in transform.GetComponentsInChildren<MeshRenderer>())
+        foreach (var gameObject in gameObjects)
         {
-            bounds.Encapsulate(child.bounds);
+            foreach (MeshRenderer child in gameObject.transform.GetComponentsInChildren<MeshRenderer>())
+            {
+                bounds.Encapsulate(child.bounds);
+            }
         }
 
         return bounds;
