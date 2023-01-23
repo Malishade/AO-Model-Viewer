@@ -32,10 +32,10 @@ public class PivotController : MonoBehaviour
     {
         if (Input.GetMouseButton(0))
         {
-            _localRotation.x -= _mouseInput.y;
+            _localRotation.x += _mouseInput.y;
             _localRotation.x = Mathf.Clamp(_localRotation.x, -_xRotClamp, _xRotClamp);
 
-            _localRotation.y += _mouseInput.x;
+            _localRotation.y -= _mouseInput.x;
         }
 
         if (Vector2.Distance(_localRotation, transform.localEulerAngles) != 0)
