@@ -55,6 +55,33 @@ public class MainViewUxml
         FixScrollSpeed();
     }
 
+    private void ExportClicked(DropdownMenuAction obj)
+    {
+        //_modelViewer.CurrentModel
+    }
+
+    private void ImportClicked(DropdownMenuAction obj)
+    {
+        StandaloneFileBrowser.OpenFilePanelAsync("Locate the FBX file.", null, "fbx", false, (paths) =>
+        {
+            if (paths.Length == 0)
+                return;
+
+            //paths.First();
+        });
+    }
+
+    private void OnEntryClicked(IEnumerable<object> obj)
+    {
+        var selectedEntry = _listView.selectedItem as ListViewDataModel;
+
+        if (selectedEntry.ResourceType == ResourceType.Models)
+        {
+            var newModel = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
+            _modelViewer.UpdateModel(newModel);
+        }
+    }
+
     private void InitSearchBar(VisualElement root)
     {
         var searchBar = _root.Q<TextField>("SearchBar");
@@ -123,11 +150,16 @@ public class MainViewUxml
         _fileDropdownMenu.AppendAction("Load Resource Database", LoadClicked, LoadStatusCallback);
         _fileDropdownMenu.AppendSeparator();
         _fileDropdownMenu.AppendAction($"Close Database", CloseClicked, CloseStatusCallback);
+        _fileDropdownMenu.AppendSeparator();
+        _fileDropdownMenu.AppendAction("Import", ImportClicked, DropdownMenuAction.AlwaysEnabled);
+        _fileDropdownMenu.AppendAction("Export", ExportClicked, DropdownMenuAction.AlwaysEnabled);
+        _fileDropdownMenu.AppendSeparator();
         _fileDropdownMenu.AppendAction($"Exit", ExitClicked, DropdownMenuAction.AlwaysEnabled);
     }
 
     private DropdownMenuAction.Status LoadStatusCallback(DropdownMenuAction e)
     {
+        Debug.Log(_settings.AODirectory == null);
         return _settings.AODirectory == null || RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
     }
 
@@ -184,7 +216,6 @@ public class MainViewUxml
         Debug.Log("Exit!");
     }
 
-
     private void FixScrollSpeed()
     {
         var scroller = _listView.Q<Scroller>();
@@ -194,17 +225,6 @@ public class MainViewUxml
             scroller.value += @event.delta.y * 2500;
             @event.StopPropagation();
         });
-    }
-
-    private void OnEntryClicked(IEnumerable<object> obj)
-    {
-        var selectedEntry = _listView.selectedItem as ListViewDataModel;
-
-        if (selectedEntry.ResourceType == ResourceType.Models)
-        {
-            var newModel = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
-            _modelViewer.UpdateModel(newModel);
-        }
     }
 
     private void PopulateListView(ResourceType resourceType, string query = "")

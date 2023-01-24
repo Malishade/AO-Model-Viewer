@@ -28,16 +28,12 @@ public class ModelViewer : MonoBehaviour
         CurrentModel.transform.position = bounds.center;
 
         foreach (var mesh in meshes)
-        {
             mesh.transform.SetParent(CurrentModel.transform);
-        }
     }
 
     private void UpdateParents(Bounds bounds)
     {   
-        PivotController.ResetRotation();
-        PivotController.ResetPosition(bounds.center);
-
+        PivotController.UpdateData(bounds);
         CurrentModel.transform.SetParent(PivotController.transform);
         CurrentModel.transform.Rotate(Vector3.up, 180);
     }
@@ -53,4 +49,6 @@ public class ModelViewer : MonoBehaviour
         distance += 0.5f * objectSize;
         Camera.transform.position = bounds.center - distance * Camera.transform.forward;
     }
+
+    void OnApplicationQuit() => RDBLoader.Instance.CloseDatabase();
 }

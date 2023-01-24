@@ -3,25 +3,28 @@ using UnityEngine;
 
 public class PivotController : MonoBehaviour
 {
+    [SerializeField] private Camera _renderCamera;
     [SerializeField] private float _sensitivity = 10f;
-    [SerializeField] private float _rotSmoothness = 0.1f;
-    [SerializeField] private float _xySmoothness = 0.1f;
-    [SerializeField] private float _zSmoothness = 0.1f;
+    [SerializeField] private float _smoothness = 0.1f;
 
     private const float _xRotClamp = 90f;
     private const float _nearZero = 0.001f;
 
     private Vector2 _localRotation = Vector2.zero;
     private Vector3 _localPosition = Vector2.zero;
-    private Vector3 _mouseInput => new Vector3(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse ScrollWheel")) * _deltaSensitivity;
 
-    private float deltaTimeConst => 100 * Time.deltaTime;
-    private float _deltaSensitivity => _sensitivity * deltaTimeConst;
-    private float _deltaRotSmoothness => _rotSmoothness * deltaTimeConst;
-    private float _deltaXySmoothness => _xySmoothness* deltaTimeConst;
-    private float _deltaZSmoothness => _zSmoothness * deltaTimeConst;
+    private BoundsSensitivityParams _boundsSenseParams = new BoundsSensitivityParams();
 
-    void Update()
+    private float _mouseInputX => Input.GetAxis("Mouse X") * _deltaSensitivity;
+    private float _mouseInputY => Input.GetAxis("Mouse Y") * _deltaSensitivity;
+    private float _mouseInputScroll => Input.GetAxis("Mouse ScrollWheel") * _deltaSensitivity;
+
+    private float _deltaTimeConst => 100 * Time.deltaTime;
+    private float _deltaSensitivity => _sensitivity * _deltaTimeConst;
+    private float _deltaSmoothness => _smoothness * _deltaTimeConst;
+
+
+    private void Update()
     {
         LeftClickInput();
         RightClickInput();
@@ -32,10 +35,10 @@ public class PivotController : MonoBehaviour
     {
         if (Input.GetMouseButton(0))
         {
-            _localRotation.x += _mouseInput.y;
+            _localRotation.x += _mouseInputY;
             _localRotation.x = Mathf.Clamp(_localRotation.x, -_xRotClamp, _xRotClamp);
 
-            _localRotation.y -= _mouseInput.x;
+            _localRotation.y -= _mouseInputX;
         }
 
         if (Vector2.Distance(_localRotation, transform.localEulerAngles) != 0)
@@ -43,8 +46,8 @@ public class PivotController : MonoBehaviour
             float currentX = transform.localEulerAngles.x;
             float currentY = transform.localEulerAngles.y;
 
-            currentX = Mathf.LerpAngle(currentX, _localRotation.x, _deltaRotSmoothness);
-            currentY = Mathf.LerpAngle(currentY, _localRotation.y, _deltaRotSmoothness);
+            currentX = Mathf.LerpAngle(currentX, _localRotation.x, _deltaSmoothness);
+            currentY = Mathf.LerpAngle(currentY, _localRotation.y, _deltaSmoothness);
 
             transform.localRotation = Quaternion.Euler(currentX, currentY, 0f);
         }
@@ -54,14 +57,14 @@ public class PivotController : MonoBehaviour
     {
         if (Input.GetMouseButton(1))
         {
-            var mouseMoveAxis = new Vector3(_mouseInput.x, _mouseInput.y, 0) / 10;
+            var mouseMoveAxis = new Vector3(_mouseInputX, _mouseInputY, 0) / 10 * _boundsSenseParams.XyTranslate;
 
             _localPosition += mouseMoveAxis;
         }
 
         if (Vector2.Distance(new Vector2(_localPosition.x, _localPosition.y), new Vector2(transform.position.x, transform.position.y)) > _nearZero)
         {
-            transform.position = Vector3.Lerp(transform.position, new Vector3(_localPosition.x, _localPosition.y, transform.position.z), _deltaXySmoothness);
+            transform.position = Vector3.Lerp(transform.position, new Vector3(_localPosition.x, _localPosition.y, transform.position.z), _deltaSmoothness);
         }
     }
 
@@ -69,26 +72,45 @@ public class PivotController : MonoBehaviour
     {
         if (Input.GetAxis("Mouse ScrollWheel") != 0f)
         {
-            var mouseScrollAxis = new Vector3(0, 0, _mouseInput.z) * 2f;
+            var mouseScrollAxis = Vector3.forward * _mouseInputScroll * 2f * _boundsSenseParams.ZTranslate;
 
             _localPosition -= mouseScrollAxis;
         }
 
         if (Mathf.Abs(_localPosition.z - transform.position.z) > _nearZero)
         {
-            transform.position = Vector3.Lerp(transform.position, new Vector3(transform.position.x, transform.position.y, _localPosition.z), _deltaZSmoothness);
+            _localPosition.z = Mathf.Clamp(_localPosition.z, _renderCamera.transform.position.z, 100);
+            transform.position = Vector3.Lerp(transform.position, new Vector3(transform.position.x, transform.position.y, _localPosition.z), _deltaSmoothness);
         }
     }
 
-    public void ResetRotation()
+    public void UpdateData(Bounds newBounds)
     {
         transform.rotation = Quaternion.identity;
         _localRotation = Vector2.zero;
+
+        transform.position = newBounds.center;
+        _localPosition = transform.position;
+
+        float boundsVolume = newBounds.size.x * newBounds.size.y * newBounds.size.z;
+        UpdateDeltas(boundsVolume);
     }
 
-    public void ResetPosition(Vector3 position)
+    private void UpdateDeltas(float boundsVolume)
     {
-        transform.position = position;
-        _localPosition = transform.position;
+        _boundsSenseParams.XyTranslate = boundsVolume < 1000 ? Remap(boundsVolume, 0, 1000, 0.05f, 1) : Remap(boundsVolume, 1000, 1822634, 1f, 10);
+        _boundsSenseParams.ZTranslate = boundsVolume < 1000 ? Remap(boundsVolume, 0, 1000, 0.05f, 1) : Remap(boundsVolume, 1000, 1822634, 1f, 10);
+    }
+
+    public class BoundsSensitivityParams
+    {
+        public float XyTranslate = 1;
+        public float ZTranslate = 1;
+    }
+
+    public float Remap(float input, float oldLow, float oldHigh, float newLow, float newHigh)
+    {
+        float t = Mathf.InverseLerp(oldLow, oldHigh, input);
+        return Mathf.Lerp(newLow, newHigh, t);
     }
 }
