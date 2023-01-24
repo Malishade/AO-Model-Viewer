@@ -51,8 +51,19 @@ public class MainViewUxml
         InitListView(root);
         InitTypeDropdown(root);
         InitFileMenu(root);
-
+        InitSearchBar(root);
         FixScrollSpeed();
+    }
+
+    private void InitSearchBar(VisualElement root)
+    {
+        var searchBar = _root.Q<TextField>("SearchBar");
+        searchBar.RegisterCallback<ChangeEvent<string>>(TextUpdate);
+    }
+
+    private void TextUpdate(ChangeEvent<string> evt)
+    {
+        PopulateListView(_resourceTypeChoices["Models (.abiff)"], evt.newValue);
     }
 
     private void InitRenderViewport(VisualElement root, Camera renderCamera)
@@ -196,15 +207,13 @@ public class MainViewUxml
         }
     }
 
-    private void PopulateListView(ResourceType resourceType)
+    private void PopulateListView(ResourceType resourceType, string query = "")
     {
-        //_listView.itemsSource = null;
         List<ListViewDataModel> listViewData = null;
 
         if (resourceType == ResourceType.Models)
         {
-            listViewData = RDBLoader.Instance.Names[(int)ResourceTypeId.RdbMesh].Select(x => new ListViewDataModel { Id = (uint)x.Key, Name = x.Value, ResourceType = ResourceType.Models }).ToList();
-
+            listViewData = ListViewDataQuery(query);
         }
         else
         {
@@ -217,6 +226,30 @@ public class MainViewUxml
         {
             (item.userData as Label).text = listViewData[index].Name;
         };
+    }
+
+    private List<ListViewDataModel> ListViewDataQuery(string query)
+    {
+        List<ListViewDataModel> listViewData = new List<ListViewDataModel>();
+
+        if (query == "")
+        {
+            foreach (var rdbKeyValue in RDBLoader.Instance.Names[(int)ResourceTypeId.RdbMesh])
+                listViewData.Add(new ListViewDataModel { Id = (uint)rdbKeyValue.Key, Name = rdbKeyValue.Value });
+
+        }
+        else
+        {
+            foreach (var rdbKeyValue in RDBLoader.Instance.Names[(int)ResourceTypeId.RdbMesh])
+            {
+                if (!rdbKeyValue.Value.Contains(query))
+                    continue;
+
+                listViewData.Add(new ListViewDataModel { Id = (uint)rdbKeyValue.Key, Name = rdbKeyValue.Value });
+            }
+        }
+
+        return listViewData;
     }
 
     public class ListViewDataModel

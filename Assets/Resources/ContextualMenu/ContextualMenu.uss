@@ -115,7 +115,7 @@
     border-right-color: var(--gray33);
     border-bottom-color: var(--gray33);
     border-radius: 3px;
-    font-size: 14px;
+    font-size: 8px;
 }
 
 .contextual-menu-item-icon {
@@ -134,24 +134,4 @@
 }
 .unity-scroll-view {
     background-color: var(--gray56);
-}
-.contextual-menu-item-icon-submenu {   
-    background-color: var(--gray125);
-
-    top: 50%;
-    translate: 0 -50%;
-    margin-right: var(--contextual-menu-icon-margin-right);
-    width: var(--contextual-menu-item-font-size);
-    height: var(--contextual-menu-item-font-size);
-    background-image: resource('Builtin Skins/DarkSkin/Images/ArrowNavigationRight.png');
-}
-
-.contextual-menu-item-icon-checked {
-        background-color: var(--gray125);
-    top: 50%;
-    translate: 0 -50%;
-    margin-right: var(--contextual-menu-icon-margin-right);
-    width: var(--contextual-menu-item-font-size);
-    height: var(--contextual-menu-item-font-size);
-    background-image: resource('Builtin Skins/DarkSkin/Images/ShurikenToggleNormalOn.png');
 }

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: e65e56186535f9a4bbf49e219c4e4729
+guid: ef7d9b53d1a31984e838b8baae4ff35e
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Aofont
+  - pixelFJ8pt1
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
