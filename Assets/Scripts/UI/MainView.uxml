@@ -1,5 +1,4 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Scripts/UI/MainView.uss?fileID=7433441132597879392&amp;guid=424f3583ab8b1be42ba84e5341a562db&amp;type=3#MainView" />
     <ui:GroupBox name="MainContainer" style="flex-direction: column; width: 100%; height: 100%; padding-left: 0; padding-bottom: 0; padding-top: 0; padding-right: 0;">
         <ui:GroupBox style="margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-top: 0; padding-bottom: 0; height: 24px; width: 100%; flex-direction: row;">
             <ui:Button text="File" display-tooltip-when-elided="true" name="FileMenu" style="width: 100px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; border-bottom-width: 0; border-right-width: 0;" />
