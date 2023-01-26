@@ -13,16 +13,15 @@ public class PivotController : MonoBehaviour
     private Vector2 _localRotation = Vector2.zero;
     private Vector3 _localPosition = Vector2.zero;
 
-    private BoundsSensitivityParams _boundsSenseParams = new BoundsSensitivityParams();
-
     private float _mouseInputX => Input.GetAxis("Mouse X") * _deltaSensitivity;
     private float _mouseInputY => Input.GetAxis("Mouse Y") * _deltaSensitivity;
     private float _mouseInputScroll => Input.GetAxis("Mouse ScrollWheel") * _deltaSensitivity;
 
+    private float _boundsSensitivity;
+
     private float _deltaTimeConst => 100 * Time.deltaTime;
     private float _deltaSensitivity => _sensitivity * _deltaTimeConst;
     private float _deltaSmoothness => _smoothness * _deltaTimeConst;
-
 
     private void Update()
     {
@@ -43,6 +42,8 @@ public class PivotController : MonoBehaviour
 
         if (Vector2.Distance(_localRotation, transform.localEulerAngles) != 0)
         {
+
+         //   Debug.Log(_deltaTimeConst);
             float currentX = transform.localEulerAngles.x;
             float currentY = transform.localEulerAngles.y;
 
@@ -57,7 +58,7 @@ public class PivotController : MonoBehaviour
     {
         if (Input.GetMouseButton(1))
         {
-            var mouseMoveAxis = new Vector3(_mouseInputX, _mouseInputY, 0) / 10 * _boundsSenseParams.XyTranslate;
+            var mouseMoveAxis = new Vector3(_mouseInputX, _mouseInputY, 0) / 10 * _boundsSensitivity;
 
             _localPosition += mouseMoveAxis;
         }
@@ -72,7 +73,7 @@ public class PivotController : MonoBehaviour
     {
         if (Input.GetAxis("Mouse ScrollWheel") != 0f)
         {
-            var mouseScrollAxis = Vector3.forward * _mouseInputScroll * 2f * _boundsSenseParams.ZTranslate;
+            var mouseScrollAxis = Vector3.forward * _mouseInputScroll * 2f * _boundsSensitivity;
 
             _localPosition -= mouseScrollAxis;
         }
@@ -93,19 +94,22 @@ public class PivotController : MonoBehaviour
         _localPosition = transform.position;
 
         float boundsVolume = newBounds.size.x * newBounds.size.y * newBounds.size.z;
-        UpdateDeltas(boundsVolume);
+        UpdateBoundsSensitivity(boundsVolume);
     }
 
-    private void UpdateDeltas(float boundsVolume)
+    private void UpdateBoundsSensitivity(float boundsVolume)
     {
-        _boundsSenseParams.XyTranslate = boundsVolume < 1000 ? Remap(boundsVolume, 0, 1000, 0.05f, 1) : Remap(boundsVolume, 1000, 1822634, 1f, 10);
-        _boundsSenseParams.ZTranslate = boundsVolume < 1000 ? Remap(boundsVolume, 0, 1000, 0.05f, 1) : Remap(boundsVolume, 1000, 1822634, 1f, 10);
-    }
+        //Debug.Log(boundsVolume);
 
-    public class BoundsSensitivityParams
-    {
-        public float XyTranslate = 1;
-        public float ZTranslate = 1;
+        Quaternion mapValues = boundsVolume < 10 ?
+            new Quaternion(0, 10, 0.05f, 0.5f) :
+            boundsVolume < 200 ?
+            new Quaternion(10, 200, 0.5f, 0.75f) :
+            boundsVolume < 1000 ?
+            new Quaternion(200, 1000, 0.75f, 2f) :
+            new Quaternion(1000, 1822634, 2f, 10f);
+
+        _boundsSensitivity = Remap(boundsVolume, mapValues.x, mapValues.y, mapValues.z, mapValues.w);
     }
 
     public float Remap(float input, float oldLow, float oldHigh, float newLow, float newHigh)

@@ -19,9 +19,9 @@ public class MainViewUxml
     private DropdownMenu _fileDropdownMenu;
     private ListView _listView;
     private ModelViewer _modelViewer;
-    private Camera _renderCamera;
     private Image _imageView;
-
+    private StatisticsDataModel _statisticsDataModel;
+    private int _currentMatIndex;
     private Dictionary<string, ResourceType> _resourceTypeChoices = new()
     {
         { "Models (.abiff)", ResourceType.Models },
@@ -36,22 +36,22 @@ public class MainViewUxml
         Characters
     }
 
-    public MainViewUxml(VisualElement root, ModelViewer modelViewer, Camera renderCamera)
+    public MainViewUxml(VisualElement root, ModelViewer modelViewer)
     {
         _settings = SettingsManager.Instance.Settings;
 
         _root = root;
         _menuManager = new ContextualMenuManager();
         _modelViewer = modelViewer;
-        _renderCamera = renderCamera;
 
         root.AddManipulator(new ContextualMenuManipulator());
 
-        InitRenderViewport(root, renderCamera);
         InitListView(root);
         InitTypeDropdown(root);
         InitFileMenu(root);
         InitSearchBar(root);
+        InitModelInspector(root);
+
         FixScrollSpeed();
     }
 
@@ -75,11 +75,47 @@ public class MainViewUxml
     {
         var selectedEntry = _listView.selectedItem as ListViewDataModel;
 
+        if (selectedEntry == null)
+            return;
+
         if (selectedEntry.ResourceType == ResourceType.Models)
         {
             var newModel = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
             _modelViewer.UpdateModel(newModel);
         }
+
+        MaterialChangeAction(_currentMatIndex);
+    }
+
+    private void InitModelInspector(VisualElement root)
+    {
+        var searchBar = root.Q<RadioButtonGroup>("MaterialButtonGroup");
+
+        _currentMatIndex = 0;
+        _statisticsDataModel = new StatisticsDataModel
+        {
+            Vertices = root.Q<Label>("VerticesCount"),
+            Tris = root.Q<Label>("EdgesCount"),
+        };
+
+        searchBar.RegisterValueChangedCallback(MaterialTypeChangeEvent);
+    }
+
+    private void MaterialTypeChangeEvent(ChangeEvent<int> evt)
+    {
+        var newValue = evt.newValue;
+
+        MaterialChangeAction(newValue);
+        _currentMatIndex = newValue;
+    }
+
+    private void MaterialChangeAction(int index)
+    {
+        var currMat = _modelViewer.RenderMaterials.RendererMaterials.First(x => x.Index == index).Material;
+
+        _modelViewer.CurrentModelMeshes.SetMeshRendererParameters(currMat, out int verts, out int edges);
+        _statisticsDataModel.Vertices.text = verts.ToString();
+        _statisticsDataModel.Tris.text = edges.ToString();
     }
 
     private void InitSearchBar(VisualElement root)
@@ -91,20 +127,6 @@ public class MainViewUxml
     private void TextUpdate(ChangeEvent<string> evt)
     {
         PopulateListView(_resourceTypeChoices["Models (.abiff)"], evt.newValue);
-    }
-
-    private void InitRenderViewport(VisualElement root, Camera renderCamera)
-    {
-        _imageView = root.Q<Image>("RightContainer");
-        _imageView.RegisterCallback<GeometryChangedEvent>(WindowSizeChange);
-    }
-
-    private void WindowSizeChange(GeometryChangedEvent evt)
-    {
-        _renderCamera.targetTexture.Release();
-        _renderCamera.targetTexture.width = (int)_imageView.layout.width;
-        _renderCamera.targetTexture.height = (int)_imageView.layout.height;
-        _renderCamera.targetTexture.Create();
     }
 
     private void InitListView(VisualElement root)
@@ -229,7 +251,12 @@ public class MainViewUxml
 
     private void PopulateListView(ResourceType resourceType, string query = "")
     {
+        if (RDBLoader.Instance.Names == null)
+            return;
+
         List<ListViewDataModel> listViewData = null;
+
+        _listView.ClearSelection();
 
         if (resourceType == ResourceType.Models)
         {
@@ -277,5 +304,11 @@ public class MainViewUxml
         public string Name;
         public uint Id;
         public ResourceType ResourceType;
+    }
+
+    public class StatisticsDataModel
+    {
+        public Label Vertices;
+        public Label Tris;
     }
 }

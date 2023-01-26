@@ -6,13 +6,24 @@ using UnityEngine;
 public class ModelViewer : MonoBehaviour
 {
     public Camera Camera;
-    public GameObject CurrentModel;
+    public ScriptableRendererMaterial RenderMaterials;
+    [HideInInspector] public GameObject CurrentModelRoot;
+    [HideInInspector] public List<MeshRenderer> CurrentModelMeshes;
     public PivotController PivotController;
     [SerializeField] private float _offset = 1f;
+    public int target = 30;
+    [SerializeField] private int _targetFrameRate = 144;
+
+    void Start()
+    {
+        //QualitySettings.vSyncCount = 0;
+        //Application.targetFrameRate = _targetFrameRate;
+    }
 
     public void UpdateModel(List<GameObject> meshes)
     {
-        Bounds newBounds = meshes.GetMeshBounds();
+        CurrentModelMeshes = meshes.GetMeshRenderers();
+        Bounds newBounds = CurrentModelMeshes.GetMeshBounds();
 
         SetupNewModel(meshes, newBounds);
         UpdateParents(newBounds);
@@ -21,21 +32,21 @@ public class ModelViewer : MonoBehaviour
 
     private void SetupNewModel(List<GameObject> meshes, Bounds bounds)
     {
-        if (CurrentModel != null)
-            DestroyImmediate(CurrentModel);
+        if (CurrentModelRoot != null)
+            DestroyImmediate(CurrentModelRoot);
 
-        CurrentModel = new GameObject();
-        CurrentModel.transform.position = bounds.center;
+        CurrentModelRoot = new GameObject();
+        CurrentModelRoot.transform.position = bounds.center;
 
         foreach (var mesh in meshes)
-            mesh.transform.SetParent(CurrentModel.transform);
+            mesh.transform.SetParent(CurrentModelRoot.transform);
     }
 
     private void UpdateParents(Bounds bounds)
     {   
         PivotController.UpdateData(bounds);
-        CurrentModel.transform.SetParent(PivotController.transform);
-        CurrentModel.transform.Rotate(Vector3.up, 180);
+        CurrentModelRoot.transform.SetParent(PivotController.transform);
+        CurrentModelRoot.transform.Rotate(Vector3.up, 180);
     }
 
 
@@ -51,4 +62,13 @@ public class ModelViewer : MonoBehaviour
     }
 
     void OnApplicationQuit() => RDBLoader.Instance.CloseDatabase();
+}
+
+[Serializable]
+public class RenderMaterials
+{
+    public Material Diffuse;
+    public Material Unlit;
+    public Material Wireframe;
+    public Material Matcap;
 }

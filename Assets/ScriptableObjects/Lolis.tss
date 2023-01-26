@@ -1,4 +1,6 @@
 @import url("/Assets/UI Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss");
 
-@import url("MainView.uss");
+@import url("/Assets/Scripts/UI/MainView.uss");
+
+
 VisualElement {}

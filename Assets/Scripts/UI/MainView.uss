@@ -1,5 +1,6 @@
 :root {  
   --White: rgb(255, 255, 255);
+  --Transparent: rgba(255, 255, 255,0);
 
   --gray225: rgb(225, 225, 225);
   --gray188: rgb(188, 188, 188);
@@ -159,14 +160,15 @@
 }
 
 .unity-button:hover {
-    color: var(--light-lime);
-    background-color: var(--lime);
+    color: var(--gray225);
+    background-color: var(--gray125);
     border-color: var(--gray33);
 }
 
 .unity-button:focus {
     color: var(--light-lime);
     background-color: var(--lime);
+    border-color: var(--gray33);
 }
 
 .unity-list-view__item:{
@@ -351,6 +353,151 @@
 }
 
 .unity-base-dropdown__checkmark {
-    background-image: resource("Assets/Sprites/Checkbox.png");
+    background-image: resource("Assets/Sprites/Checkbox-Circle-Active.png");
+    -unity-background-image-tint-color: var(--White);
+    height: 11px;
+    width: 11px;
+    margin-top: -2px;
+    margin-left: 6px;
+    margin-right: 11px;
+
+}
+
+.unity-radio-button__checkmark-background {
+        background-image: resource("Assets/Sprites/Checkbox-Circle-Inactive.png");
+        height: 11px;
+        width: 11px;
+        border-width: 0px;
+        border-radius: 0px;
+        background-color: var(--Transparent);
+        padding-top: 0px;
+        -unity-background-image-tint-color: var(--gray188);
+}
+
+.unity-radio-button:hover > .unity-radio-button__input > .unity-radio-button__checkmark-background {
+        -unity-background-image-tint-color: var(--White);
+
+}
+
+.unity-radio-button-group {
+padding-top: 7px;
+}
+.unity-radio-button__text {
+    padding-top: 1px;
+}
+
+.unity-radio-button:checked > .unity-radio-button__input > .unity-radio-button__text{
+        color: var(--light-lime);
+}
+
+.unity-radio-button:hover > .unity-radio-button__input > .unity-radio-button__text{
+        color: var(--gray225);
+}
+
+.unity-radio-button:hover:focus > .unity-radio-button__input > .unity-radio-button__text{
+        color: var(--light-lime);
+}
+
+.unity-radio-button:hover:checked > .unity-radio-button__input > .unity-radio-button__text{
+        color: var(--light-lime);
+}
+
+.unity-radio-button__checkmark {
+        background-image: resource("Assets/Sprites/Checkbox-Circle-Active.png");
+        height: 11px;
+        width: 11px;
+        border-width: 0px;
+        border-radius: 0px;
+        background-color: var(--Transparent);
+        position: absolute;
+}
+
+.unity-foldout__toggle > .unity-toggle__input:focus > .unity-label
+{
+    color: var(--gray188);
+}
+
+.unity-foldout__toggle > .unity-toggle__input:hover > .unity-label
+{
+    color: var(--gray225);
+}
+
+.unity-foldout__toggle > .unity-toggle__input:checked > .unity-label
+{
+    color: var(--light-lime);
+}
+
+
+.unity-foldout__toggle > .unity-toggle__input:checked:focus > .unity-toggle__checkmark
+{   
+    margin-bottom: 6px;
+    margin-left: 4px;
+    margin-top: 4px;
+    margin-right: 4px;
+    height: 11px;
+    width: 11px;
+    background-image: resource("Assets/Sprites/Foldout-Active.png");
+    -unity-background-image-tint-color: var(--gray188);
+}
+
+.unity-foldout__toggle > .unity-toggle__input:checked > .unity-toggle__checkmark
+{   
+    margin-bottom: 6px;
+    margin-left: 4px;
+    margin-top: 4px;
+    margin-right: 4px;
+    height: 11px;
+    width: 11px;
+    background-image: resource("Assets/Sprites/Foldout-Active.png");
+        -unity-background-image-tint-color: var(--gray188);
+
+}
+
+.unity-foldout__toggle > .unity-toggle__input:checked:hover > .unity-toggle__checkmark
+{   
+    margin-bottom: 6px;
+    margin-left: 4px;
+    margin-top: 4px;
+    margin-right: 4px;
+    height: 11px;
+    width: 11px;
+    background-image: resource("Assets/Sprites/Foldout-Active.png");
+    -unity-background-image-tint-color: var(--White);
+}
+
+.unity-foldout__toggle > .unity-toggle__input > .unity-toggle__checkmark
+{   
+    margin-bottom: 6px;
+    margin-left: 4px;
+    margin-top: 4px;
+    margin-right: 4px;
+    height: 11px;
+    width: 11px;
+    background-image: resource("Assets/Sprites/Foldout-Inactive.png");
+    -unity-background-image-tint-color: var(--gray188);
+}
+
+.unity-foldout__toggle > .unity-toggle__input:focus > .unity-toggle__checkmark
+{   
+    margin-bottom: 6px;
+    margin-left: 4px;
+    margin-top: 4px;
+    margin-right: 4px;
+    height: 11px;
+    width: 11px;
+    background-image: resource("Assets/Sprites/Foldout-Inactive.png");
+    -unity-background-image-tint-color: var(--gray188);
+
+}
+
+.unity-foldout__toggle > .unity-toggle__input:hover > .unity-toggle__checkmark
+{   
+    margin-bottom: 6px;
+    margin-left: 4px;
+    margin-top: 4px;
+    margin-right: 4px;
+    height: 11px;
+    width: 11px;
+    background-image: resource("Assets/Sprites/Foldout-Inactive.png");
     -unity-background-image-tint-color: var(--White);
 }

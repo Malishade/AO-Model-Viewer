@@ -12,8 +12,5 @@ public class MainView : MonoBehaviour
     [SerializeField]
     private UIDocument _uiDocument;
 
-    [SerializeField]
-    private Camera _renderCamera;
-
-    void OnEnable() => new MainViewUxml(_uiDocument.rootVisualElement, _modelViewer, _renderCamera);
+    void OnEnable() => new MainViewUxml(_uiDocument.rootVisualElement, _modelViewer);
 }
