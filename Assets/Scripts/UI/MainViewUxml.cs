@@ -22,6 +22,9 @@ public class MainViewUxml
     private Image _imageView;
     private StatisticsDataModel _statisticsDataModel;
     private int _currentMatIndex;
+    private MeshData _meshData;
+    private Label _resultsLabel;
+
     private Dictionary<string, ResourceType> _resourceTypeChoices = new()
     {
         { "Models (.abiff)", ResourceType.Models },
@@ -84,6 +87,11 @@ public class MainViewUxml
             _modelViewer.UpdateModel(newModel);
         }
 
+        _modelViewer.CurrentModelMeshes.GetMeshData(out _meshData);
+
+        _statisticsDataModel.Vertices.text = _meshData.VerticesCount.ToString();
+        _statisticsDataModel.Tris.text = _meshData.TrianglesCount.ToString();
+      
         MaterialChangeAction(_currentMatIndex);
     }
 
@@ -103,19 +111,19 @@ public class MainViewUxml
 
     private void MaterialTypeChangeEvent(ChangeEvent<int> evt)
     {
-        var newValue = evt.newValue;
-
-        MaterialChangeAction(newValue);
-        _currentMatIndex = newValue;
+        MaterialChangeAction(evt.newValue);
+        _currentMatIndex = evt.newValue;
     }
 
     private void MaterialChangeAction(int index)
     {
         var currMat = _modelViewer.RenderMaterials.RendererMaterials.First(x => x.Index == index).Material;
 
-        _modelViewer.CurrentModelMeshes.SetMeshRendererParameters(currMat, out int verts, out int edges);
-        _statisticsDataModel.Vertices.text = verts.ToString();
-        _statisticsDataModel.Tris.text = edges.ToString();
+        foreach (var s in _meshData.MeshRendererData)
+        {
+            s.Key.material = currMat;
+            s.Key.material.SetTexture("_MainTex", s.Value);
+        }
     }
 
     private void InitSearchBar(VisualElement root)
@@ -144,7 +152,17 @@ public class MainViewUxml
 
             return newListEntry;
         };
+
+        _resultsLabel = root.Q<Label>("ResultsLabel");
+
+        _listView.RegisterCallback<PointerEnterEvent>(OnMouseEnter);
+        _listView.RegisterCallback<PointerLeaveEvent>(OnMouseLeave);
+
     }
+
+    private void OnMouseLeave(PointerLeaveEvent evt) => _modelViewer.PivotController.DisableMouseInput = false;
+
+    private void OnMouseEnter(PointerEnterEvent evt) => _modelViewer.PivotController.DisableMouseInput = true;
 
     private void InitTypeDropdown(VisualElement root)
     {
@@ -179,16 +197,10 @@ public class MainViewUxml
         _fileDropdownMenu.AppendAction($"Exit", ExitClicked, DropdownMenuAction.AlwaysEnabled);
     }
 
-    private DropdownMenuAction.Status LoadStatusCallback(DropdownMenuAction e)
-    {
-        Debug.Log(_settings.AODirectory == null);
-        return _settings.AODirectory == null || RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
-    }
+    private DropdownMenuAction.Status LoadStatusCallback(DropdownMenuAction e) => _settings.AODirectory == null || RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
 
-    private DropdownMenuAction.Status CloseStatusCallback(DropdownMenuAction e)
-    {
-        return RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
-    }
+    private DropdownMenuAction.Status CloseStatusCallback(DropdownMenuAction e) => RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
+
 
     private void ExpandFileMenu(ClickEvent clickEvent)
     {
@@ -268,11 +280,12 @@ public class MainViewUxml
         }
 
         _listView.itemsSource = listViewData;
-
         _listView.bindItem = (item, index) =>
         {
             (item.userData as Label).text = listViewData[index].Name;
         };
+
+        _resultsLabel.text = listViewData.Count().ToString();
     }
 
     private List<ListViewDataModel> ListViewDataQuery(string query)
@@ -310,5 +323,12 @@ public class MainViewUxml
     {
         public Label Vertices;
         public Label Tris;
+    }
+
+    public class MeshData
+    {
+        public Dictionary<MeshRenderer, Texture> MeshRendererData;
+        public int VerticesCount;
+        public int TrianglesCount;
     }
 }

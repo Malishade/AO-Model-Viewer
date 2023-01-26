@@ -11,13 +11,12 @@ public class ModelViewer : MonoBehaviour
     [HideInInspector] public List<MeshRenderer> CurrentModelMeshes;
     public PivotController PivotController;
     [SerializeField] private float _offset = 1f;
-    public int target = 30;
     [SerializeField] private int _targetFrameRate = 144;
 
     void Start()
     {
-        //QualitySettings.vSyncCount = 0;
-        //Application.targetFrameRate = _targetFrameRate;
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = _targetFrameRate;
     }
 
     public void UpdateModel(List<GameObject> meshes)

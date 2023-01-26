@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static MainViewUxml;
 
 public static class Extensions
 {
@@ -32,20 +33,23 @@ public static class Extensions
         return meshRenderers;
     }
 
-    public static void SetMeshRendererParameters(this List<MeshRenderer> meshes, Material material, out int vertexCount, out int triCount)
+    public static void GetMeshData(this List<MeshRenderer> meshes, out MeshData meshData)
     {
-        triCount = 0;
-        vertexCount = 0;
+
+
+        meshData = new ();
+        meshData.MeshRendererData = new();
 
         foreach (MeshRenderer mesh in meshes)
         {
             var texture = mesh.material.GetTexture("_MainTex");
-            mesh.material = material;
-            mesh.material.SetTexture("_MainTex", texture);
+
+            if (texture != null)
+                meshData.MeshRendererData.Add(mesh, texture);
 
             var meshFilter = mesh.gameObject.GetComponent<MeshFilter>();
-            vertexCount += meshFilter.sharedMesh.vertexCount;
-            triCount += meshFilter.sharedMesh.triangles.Length/3;
+            meshData.VerticesCount += meshFilter.sharedMesh.vertexCount;
+            meshData.TrianglesCount += meshFilter.sharedMesh.triangles.Length/3;
         }
     }
 

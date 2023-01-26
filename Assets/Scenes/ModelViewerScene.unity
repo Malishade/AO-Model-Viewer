@@ -476,7 +476,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _renderCamera: {fileID: 67995470}
   _sensitivity: 10
-  _smoothness: 0.1
+  _smoothness: 10
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -617,7 +617,6 @@ MonoBehaviour:
   _listViewEntryTemplate: {fileID: 9197481963319205126, guid: df529b091120e734d87bcf249524ee8c, type: 3}
   _modelViewer: {fileID: 1523332223}
   _uiDocument: {fileID: 1308743550}
-  _renderCamera: {fileID: 67995470}
 --- !u!1 &1523332221
 GameObject:
   m_ObjectHideFlags: 0
@@ -669,5 +668,4 @@ MonoBehaviour:
   CurrentModelMeshes: []
   PivotController: {fileID: 790758991}
   _offset: 1
-  target: 30
-  _targetFrameRate: 144
+  _targetFrameRate: 200
