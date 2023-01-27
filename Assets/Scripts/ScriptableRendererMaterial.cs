@@ -10,6 +10,16 @@ public class ScriptableRendererMaterial : ScriptableObject
 [Serializable]
 public class RendererMaterial
 {
-    public int Index;
+    public MaterialTypeId Index;
     public Material Material;
+}
+
+public enum MaterialTypeId
+{
+    Color,
+    Unlit,
+    Wireframe,
+    Matcap1,
+    Matcap2,
+    Matcap3,
 }

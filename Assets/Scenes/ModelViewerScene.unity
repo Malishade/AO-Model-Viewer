@@ -190,7 +190,7 @@ Transform:
   m_Children:
   - {fileID: 714799362}
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &57390028
 MonoBehaviour:
@@ -244,8 +244,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.01
-  far clip plane: 1000
+  near clip plane: 0.1
+  far clip plane: 999999
   field of view: 55
   orthographic: 0
   orthographic size: 5
@@ -366,12 +366,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
   m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_Father: {fileID: 963194228}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
 --- !u!1 &714799361
 GameObject:
@@ -474,9 +474,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79ae00d95bc2b804aa78c893f91e0bb7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _renderCamera: {fileID: 67995470}
+  RenderCamera: {fileID: 67995470}
   _sensitivity: 10
   _smoothness: 10
+  DisableMouseInput: 0
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -517,8 +518,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.01
-  far clip plane: 1000
+  near clip plane: 0.1
+  far clip plane: 0.11
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -550,8 +551,9 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 67995471}
+  - {fileID: 705507995}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1308743546
 GameObject:
@@ -584,7 +586,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1308743550
 MonoBehaviour:
@@ -642,13 +644,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1523332221}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 790758990}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1523332223
 MonoBehaviour:
@@ -662,10 +664,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d7f2dfc8649feb4fb055f95211259d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Camera: {fileID: 963194227}
+  MainCamera: {fileID: 963194227}
   RenderMaterials: {fileID: 11400000, guid: c4357ec6dadbc48479c09ac12cd18a3f, type: 2}
+  TexturePlanePreset: {fileID: 1373176966516033808, guid: 88c00b5d0f58bca468c786d264a59bc3, type: 3}
+  PivotController: {fileID: 790758991}
   CurrentModelRoot: {fileID: 0}
   CurrentModelMeshes: []
-  PivotController: {fileID: 790758991}
   _offset: 1
   _targetFrameRate: 200

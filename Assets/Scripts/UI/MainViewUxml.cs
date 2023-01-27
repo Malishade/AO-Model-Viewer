@@ -19,15 +19,14 @@ public class MainViewUxml
     private DropdownMenu _fileDropdownMenu;
     private ListView _listView;
     private ModelViewer _modelViewer;
-    private Image _imageView;
     private StatisticsDataModel _statisticsDataModel;
-    private int _currentMatIndex;
     private MeshData _meshData;
     private Label _resultsLabel;
-    private TextField _searchBar;
-
+    private TextField _searchBarTextField;
+    private Button _searchBarClearButton;
     private ResourceTypeId _activeResourceTypeId = ResourceTypeId.RdbMesh;
-
+    private MaterialTypeId _activeMatTypeId;
+    private Foldout _modelInspectorFoldout;
     private Dictionary<string, ResourceTypeId> _resourceTypeChoices = new()
     {
         { "Models (.abiff)", ResourceTypeId.RdbMesh },
@@ -77,42 +76,50 @@ public class MainViewUxml
         if (selectedEntry == null)
             return;
 
-        if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
+        switch (selectedEntry.ResourceType)
         {
-            var newModel = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
-            _modelViewer.UpdateModel(newModel);
-
-            _modelViewer.CurrentModelMeshes.GetMeshData(out _meshData);
-
-            _statisticsDataModel.Vertices.text = _meshData.VerticesCount.ToString();
-            _statisticsDataModel.Tris.text = _meshData.TrianglesCount.ToString();
-
-            MaterialChangeAction(_currentMatIndex);
+            case ResourceTypeId.RdbMesh:
+                var rdbMesh = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
+                _modelViewer.InitUpdateRdbMesh(rdbMesh);
+                _modelViewer.CurrentModelMeshes.GetMeshData(out _meshData);
+                _statisticsDataModel.Vertices.text = _meshData.VerticesCount.ToString();
+                _statisticsDataModel.Tris.text = _meshData.TrianglesCount.ToString();
+                MaterialChangeAction(_activeMatTypeId);
+                break;
+            case ResourceTypeId.Texture:
+                var rdbMat = RDBLoader.Instance.LoadMaterial(selectedEntry.Id);
+                _modelViewer.InitUpdateTexture(rdbMat);
+                break;
         }
+
     }
 
     private void InitModelInspector(VisualElement root)
     {
-        var searchBar = root.Q<RadioButtonGroup>("MaterialButtonGroup");
+        _modelInspectorFoldout = root.Q<Foldout>("ModelInspector");
+        var _materialRadioButtonGroup = root.Q<RadioButtonGroup>("MaterialButtonGroup");
 
-        _currentMatIndex = 0;
+        _activeMatTypeId = 0;
         _statisticsDataModel = new StatisticsDataModel
         {
             Vertices = root.Q<Label>("VerticesCount"),
             Tris = root.Q<Label>("EdgesCount"),
         };
 
-        searchBar.RegisterValueChangedCallback(MaterialTypeChangeEvent);
+        _materialRadioButtonGroup.RegisterValueChangedCallback(MaterialTypeChangeEvent);
     }
 
     private void MaterialTypeChangeEvent(ChangeEvent<int> evt)
     {
-        MaterialChangeAction(evt.newValue);
-        _currentMatIndex = evt.newValue;
+        MaterialChangeAction((MaterialTypeId)evt.newValue);
+        _activeMatTypeId = (MaterialTypeId)evt.newValue;
     }
 
-    private void MaterialChangeAction(int index)
+    private void MaterialChangeAction(MaterialTypeId index)
     {
+        if (_modelViewer.CurrentModelRoot == null)
+            return;
+
         var currMat = _modelViewer.RenderMaterials.RendererMaterials.First(x => x.Index == index).Material;
 
         foreach (var s in _meshData.MeshRendererData)
@@ -124,15 +131,16 @@ public class MainViewUxml
 
     private void InitSearchBar(VisualElement root)
     {
-        _searchBar = _root.Q<TextField>("SearchBar");
-        _searchBar.SetEnabled(false);
-        _searchBar.RegisterCallback<ChangeEvent<string>>(TextUpdate);
+        _searchBarTextField = root.Q<TextField>("SearchBar");
+        _searchBarTextField.SetEnabled(false);
+        _searchBarTextField.RegisterCallback<ChangeEvent<string>>(TextUpdate);
 
-        var searchBarButtton = _root.Q<Button>("SearchBarClear");
-        searchBarButtton.RegisterCallback<ClickEvent>(ClearSearchBar);
+        _searchBarClearButton = root.Q<Button>("SearchBarClear");
+        _searchBarClearButton.SetEnabled(false);
+        _searchBarClearButton.RegisterCallback<ClickEvent>(ClearSearchBar);
     }
 
-    private void ClearSearchBar(ClickEvent evt) => _searchBar.value = "";
+    private void ClearSearchBar(ClickEvent evt) => _searchBarTextField.value = "";
 
     private void TextUpdate(ChangeEvent<string> evt)
     {
@@ -156,15 +164,17 @@ public class MainViewUxml
         };
 
         _resultsLabel = root.Q<Label>("ResultsLabel");
-
-        _listView.RegisterCallback<PointerEnterEvent>(OnMouseEnter);
-        _listView.RegisterCallback<PointerLeaveEvent>(OnMouseLeave);
-
     }
 
-    private void OnMouseLeave(PointerLeaveEvent evt) => _modelViewer.PivotController.DisableMouseInput = false;
+    private void OnMouseLeave(PointerLeaveEvent evt)
+    {
+        _modelViewer.PivotController.DisableMouseInput = false;
+    }
 
-    private void OnMouseEnter(PointerEnterEvent evt) => _modelViewer.PivotController.DisableMouseInput = true;
+    private void OnMouseEnter(PointerEnterEvent evt)
+    {
+        _modelViewer.PivotController.DisableMouseInput = true;
+    }
 
     private void InitTypeDropdown(VisualElement root)
     {
@@ -179,8 +189,26 @@ public class MainViewUxml
         Debug.Log($"ResourceTypeChanged: {_resourceTypeChoices[e.newValue]}");
 
         _activeResourceTypeId = _resourceTypeChoices[e.newValue];
+        _modelViewer.DestroyCurrentModel();
 
         PopulateListView();
+
+        switch (_activeResourceTypeId)
+        {
+            case ResourceTypeId.RdbMesh:
+                _listView.RegisterCallback<PointerEnterEvent>(OnMouseEnter);
+                _listView.RegisterCallback<PointerLeaveEvent>(OnMouseLeave);
+                _modelViewer.PivotController.RenderCamera.orthographic = false;
+                _modelInspectorFoldout.style.display = DisplayStyle.Flex;
+                break;
+            case ResourceTypeId.Texture:
+                _listView.UnregisterCallback<PointerEnterEvent>(OnMouseEnter);
+                _listView.UnregisterCallback<PointerLeaveEvent>(OnMouseLeave);
+                _modelViewer.PivotController.DisableMouseInput = true;
+                _modelViewer.PivotController.RenderCamera.orthographic = true;
+                _modelInspectorFoldout.style.display = DisplayStyle.None;
+                break;
+        }
     }
 
     private void InitFileMenu(VisualElement root)
@@ -205,7 +233,6 @@ public class MainViewUxml
     private DropdownMenuAction.Status LoadStatusCallback(DropdownMenuAction e) => _settings.AODirectory == null || RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
 
     private DropdownMenuAction.Status CloseStatusCallback(DropdownMenuAction e) => RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
-
 
     private void ExpandFileMenu(ClickEvent clickEvent)
     {
@@ -241,7 +268,8 @@ public class MainViewUxml
         Debug.Log("Load!");
         RDBLoader.Instance.OpenDatabase();
         PopulateListView();
-        _searchBar.SetEnabled(true);
+        _searchBarTextField.SetEnabled(true);
+        _searchBarClearButton.SetEnabled(true);
     }
 
     private void CloseClicked(DropdownMenuAction action)

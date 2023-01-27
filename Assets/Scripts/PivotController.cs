@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PivotController : MonoBehaviour
 {
-    [SerializeField] private Camera _renderCamera;
+    [SerializeField] public Camera RenderCamera;
     [SerializeField] private float _sensitivity = 10f;
     [SerializeField] private float _smoothness = 10f;
 
@@ -95,7 +95,7 @@ public class PivotController : MonoBehaviour
         if (!(Mathf.Abs(_localPosition.z - transform.position.z) > _nearZero))
             return;
 
-        _localPosition.z = Mathf.Clamp(_localPosition.z, _renderCamera.transform.position.z, 100);
+        _localPosition.z = Mathf.Clamp(_localPosition.z, RenderCamera.transform.position.z, 100);
         transform.position = Vector3.Lerp(transform.position, new Vector3(transform.position.x, transform.position.y, _localPosition.z), _deltaSmoothness);
     }
     public void UpdateData(Bounds newBounds)

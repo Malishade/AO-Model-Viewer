@@ -81,7 +81,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         return meshes;
     }
 
-    private Material LoadMaterial(int texId)
+    public Material LoadMaterial(int texId)
     {
         Debug.Log($"Loading texture {texId}");
         Texture2D tex = new Texture2D(1, 1);

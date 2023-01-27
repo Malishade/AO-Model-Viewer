@@ -5,11 +5,14 @@ using UnityEngine;
 
 public class ModelViewer : MonoBehaviour
 {
-    public Camera Camera;
+    public Camera MainCamera;
     public ScriptableRendererMaterial RenderMaterials;
+    public GameObject TexturePlanePreset;
+    public PivotController PivotController;
+
     [HideInInspector] public GameObject CurrentModelRoot;
     [HideInInspector] public List<MeshRenderer> CurrentModelMeshes;
-    public PivotController PivotController;
+   
     [SerializeField] private float _offset = 1f;
     [SerializeField] private int _targetFrameRate = 200;
 
@@ -19,21 +22,54 @@ public class ModelViewer : MonoBehaviour
         Application.targetFrameRate = _targetFrameRate;
     }
 
-    public void UpdateModel(List<GameObject> meshes)
+    public void InitUpdateTexture(Material material)
+    {
+        var mesh = Instantiate(TexturePlanePreset);
+        var meshRenderer = mesh.GetComponent<MeshRenderer>();
+        var texture = material.GetTexture("_MainTex");
+
+        meshRenderer.material.SetTexture("_MainTex", texture);
+
+        var adjustedScale = mesh.transform.localScale;
+        adjustedScale.x = texture.width;
+        adjustedScale.z = texture.height;
+
+        mesh.transform.localScale = adjustedScale;
+
+        var meshes = new List<GameObject> { mesh.gameObject };
+
+        CurrentModelMeshes = new List<MeshRenderer> { meshRenderer };
+
+        UpdateModelViewer(meshes);
+
+        float orthoSize = texture.height < texture.width ? 2.8125f * texture.width : 5f * texture.height;
+        PivotController.RenderCamera.orthographicSize = orthoSize;
+    }
+
+    public void InitUpdateRdbMesh(List<GameObject> meshes)
     {
         CurrentModelMeshes = meshes.GetMeshRenderers();
-        Bounds newBounds = CurrentModelMeshes.GetMeshBounds();
+        UpdateModelViewer(meshes);
+    }
 
-        SetupNewModel(meshes, newBounds);
-        UpdateParents(newBounds);
-        UpdateCameraPosition(newBounds);
+    private void UpdateModelViewer(List<GameObject> meshes)
+    {
+        Bounds bounds = CurrentModelMeshes.GetMeshBounds();
+        
+        DestroyCurrentModel();
+        SetupNewModel(meshes, bounds);
+        UpdateParents(bounds);
+        UpdateCameraPosition(bounds);
+    }
+
+    public void DestroyCurrentModel()
+    {
+        if (CurrentModelRoot != null)
+            DestroyImmediate(CurrentModelRoot);
     }
 
     private void SetupNewModel(List<GameObject> meshes, Bounds bounds)
     {
-        if (CurrentModelRoot != null)
-            DestroyImmediate(CurrentModelRoot);
-
         CurrentModelRoot = new GameObject();
         CurrentModelRoot.transform.position = bounds.center;
 
@@ -54,10 +90,10 @@ public class ModelViewer : MonoBehaviour
         float cameraDistance = _offset;
         Vector3 objectSizes = bounds.max - bounds.min;
         float objectSize = Mathf.Max(objectSizes.x, objectSizes.y, objectSizes.z);
-        float cameraView = 2.0f * Mathf.Tan(0.5f * Mathf.Deg2Rad * Camera.fieldOfView);
+        float cameraView = 2.0f * Mathf.Tan(0.5f * Mathf.Deg2Rad * MainCamera.fieldOfView);
         float distance = cameraDistance * objectSize / cameraView;
         distance += 0.5f * objectSize;
-        Camera.transform.position = bounds.center - distance * Camera.transform.forward;
+        MainCamera.transform.position = bounds.center - distance * MainCamera.transform.forward;
     }
 
     void OnApplicationQuit() => RDBLoader.Instance.CloseDatabase();
