@@ -6,12 +6,14 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using static AODB.DbClasses.RDBMesh_t;
+using static AODB.Common.DbClasses.RDBMesh_t;
 
 [CreateAssetMenu]
 public class RDBLoader : ScriptableSingleton<RDBLoader>
 {
-    public Dictionary<int, Dictionary<int, string>> Names = null;
+    public Dictionary<int, string> MeshNames = null;
+
+    private Dictionary<int, Dictionary<int, string>> Names = null;
     public bool IsOpen => _rdbController != null;
 
     private Settings _settings;
@@ -29,8 +31,11 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
         _rdbController = new RdbController(_settings.AODirectory);
 
-        if(Names == null)
+        if (Names == null)
+        {
             Names = _rdbController.Get<InfoObject>(1).Types;
+            MeshNames = Names[(int)ResourceTypeId.RdbMesh].Where(x => _rdbController.RecordTypeToId[(int)ResourceTypeId.RdbMesh].ContainsKey((int)x.Key)).ToDictionary(x => x.Key, x => x.Value);
+        }
     }
 
     public void CloseDatabase()
@@ -41,8 +46,9 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         _rdbController.Dispose();
     }
 
-    public List<GameObject> CreateAbiffMesh(uint meshId)
+    public List<GameObject> CreateAbiffMesh(int meshId)
     {
+        Debug.Log($"Loading mesh {meshId}");
         List<GameObject> meshes = new List<GameObject>();
 
         RDBMesh rdbMesh = _rdbController.Get<RDBMesh>(meshId);
@@ -56,14 +62,14 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
             meshRenderer.mesh = new Mesh()
             {
-                vertices = mesh.Vertices.Select(x => x.position).ToUnityArray(),
+                vertices = mesh.Vertices.Select(x => x.Position).ToUnityArray(),
                 triangles = mesh.Triangles,
-                normals = mesh.Vertices.Select(x => x.normals).ToUnityArray(),
-                uv = mesh.Vertices.Select(x => new Vector2(x.uvs.X, -x.uvs.Y)).ToArray(),
+                normals = mesh.Vertices.Select(x => x.Normals).ToUnityArray(),
+                uv = mesh.Vertices.Select(x => new Vector2(x.UVs.X, -x.UVs.Y)).ToArray(),
             };
 
             if (mesh.Material != null)
-                submeshObj.AddComponent<MeshRenderer>().material = LoadMaterial(mesh.Material.Texture);
+                submeshObj.AddComponent<MeshRenderer>().material = LoadMaterial((int)mesh.Material.Texture);
 
             submeshObj.transform.position = mesh.BasePos.ToUnity();
             submeshObj.transform.rotation = mesh.BaseRotation.ToUnity();
@@ -75,8 +81,9 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         return meshes;
     }
 
-    private Material LoadMaterial(uint texId)
+    private Material LoadMaterial(int texId)
     {
+        Debug.Log($"Loading texture {texId}");
         Texture2D tex = new Texture2D(1, 1);
         tex.LoadImage(_rdbController.Get<AOTexture>(texId).JpgData);
 

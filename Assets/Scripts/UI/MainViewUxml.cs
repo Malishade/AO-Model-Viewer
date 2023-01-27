@@ -263,7 +263,8 @@ public class MainViewUxml
 
     private void PopulateListView(ResourceType resourceType, string query = "")
     {
-        if (RDBLoader.Instance.Names == null)
+        //Probably change this to check if db open
+        if (RDBLoader.Instance.MeshNames == null)
             return;
 
         List<ListViewDataModel> listViewData = null;
@@ -294,18 +295,18 @@ public class MainViewUxml
 
         if (query == "")
         {
-            foreach (var rdbKeyValue in RDBLoader.Instance.Names[(int)ResourceTypeId.RdbMesh])
-                listViewData.Add(new ListViewDataModel { Id = (uint)rdbKeyValue.Key, Name = rdbKeyValue.Value });
+            foreach (var rdbKeyValue in RDBLoader.Instance.MeshNames)
+                listViewData.Add(new ListViewDataModel { Id = rdbKeyValue.Key, Name = rdbKeyValue.Value });
 
         }
         else
         {
-            foreach (var rdbKeyValue in RDBLoader.Instance.Names[(int)ResourceTypeId.RdbMesh])
+            foreach (var rdbKeyValue in RDBLoader.Instance.MeshNames)
             {
                 if (!rdbKeyValue.Value.Contains(query))
                     continue;
 
-                listViewData.Add(new ListViewDataModel { Id = (uint)rdbKeyValue.Key, Name = rdbKeyValue.Value });
+                listViewData.Add(new ListViewDataModel { Id = rdbKeyValue.Key, Name = rdbKeyValue.Value });
             }
         }
 
@@ -315,7 +316,7 @@ public class MainViewUxml
     public class ListViewDataModel
     {
         public string Name;
-        public uint Id;
+        public int Id;
         public ResourceType ResourceType;
     }
 
