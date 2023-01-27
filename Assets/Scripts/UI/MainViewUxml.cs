@@ -26,19 +26,14 @@ public class MainViewUxml
     private Label _resultsLabel;
     private TextField _searchBar;
 
-    private Dictionary<string, ResourceType> _resourceTypeChoices = new()
-    {
-        { "Models (.abiff)", ResourceType.Models },
-        { "Textures (.png)", ResourceType.Textures },
-        { "Characters (.cir)", ResourceType.Characters },
-    };
+    private ResourceTypeId _activeResourceTypeId = ResourceTypeId.RdbMesh;
 
-    public enum ResourceType
+    private Dictionary<string, ResourceTypeId> _resourceTypeChoices = new()
     {
-        Models,
-        Textures,
-        Characters
-    }
+        { "Models (.abiff)", ResourceTypeId.RdbMesh },
+        { "Textures (.png)", ResourceTypeId.Texture },
+        //{ "Characters (.cir)", ResourceTypeId.RdbMesh },
+    };
 
     public MainViewUxml(VisualElement root, ModelViewer modelViewer)
     {
@@ -82,18 +77,18 @@ public class MainViewUxml
         if (selectedEntry == null)
             return;
 
-        if (selectedEntry.ResourceType == ResourceType.Models)
+        if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
         {
             var newModel = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
             _modelViewer.UpdateModel(newModel);
+
+            _modelViewer.CurrentModelMeshes.GetMeshData(out _meshData);
+
+            _statisticsDataModel.Vertices.text = _meshData.VerticesCount.ToString();
+            _statisticsDataModel.Tris.text = _meshData.TrianglesCount.ToString();
+
+            MaterialChangeAction(_currentMatIndex);
         }
-
-        _modelViewer.CurrentModelMeshes.GetMeshData(out _meshData);
-
-        _statisticsDataModel.Vertices.text = _meshData.VerticesCount.ToString();
-        _statisticsDataModel.Tris.text = _meshData.TrianglesCount.ToString();
-      
-        MaterialChangeAction(_currentMatIndex);
     }
 
     private void InitModelInspector(VisualElement root)
@@ -141,7 +136,7 @@ public class MainViewUxml
 
     private void TextUpdate(ChangeEvent<string> evt)
     {
-        PopulateListView(_resourceTypeChoices["Models (.abiff)"], evt.newValue);
+        PopulateListView(evt.newValue);
     }
 
     private void InitListView(VisualElement root)
@@ -182,7 +177,10 @@ public class MainViewUxml
     private void ResourceTypeChanged(ChangeEvent<string> e)
     {
         Debug.Log($"ResourceTypeChanged: {_resourceTypeChoices[e.newValue]}");
-        PopulateListView(_resourceTypeChoices[e.newValue]);
+
+        _activeResourceTypeId = _resourceTypeChoices[e.newValue];
+
+        PopulateListView();
     }
 
     private void InitFileMenu(VisualElement root)
@@ -242,7 +240,7 @@ public class MainViewUxml
     {
         Debug.Log("Load!");
         RDBLoader.Instance.OpenDatabase();
-        PopulateListView((ResourceType)_resourceTypeDropdown.index);
+        PopulateListView();
         _searchBar.SetEnabled(true);
     }
 
@@ -269,24 +267,16 @@ public class MainViewUxml
         });
     }
 
-    private void PopulateListView(ResourceType resourceType, string query = "")
+    private void PopulateListView(string query = "")
     {
-        //Probably change this to check if db open
-        if (RDBLoader.Instance.MeshNames == null)
+        if (!RDBLoader.Instance.IsOpen)
             return;
 
         List<ListViewDataModel> listViewData = null;
 
         _listView.ClearSelection();
 
-        if (resourceType == ResourceType.Models)
-        {
-            listViewData = ListViewDataQuery(query);
-        }
-        else
-        {
-            return;
-        }
+        listViewData = ListViewDataQuery(query);
 
         _listView.itemsSource = listViewData;
         _listView.bindItem = (item, index) =>
@@ -303,18 +293,18 @@ public class MainViewUxml
 
         if (query == "")
         {
-            foreach (var rdbKeyValue in RDBLoader.Instance.MeshNames)
-                listViewData.Add(new ListViewDataModel { Id = rdbKeyValue.Key, Name = rdbKeyValue.Value });
+            foreach (var rdbKeyValue in RDBLoader.Instance.Names[(int)_activeResourceTypeId])
+                listViewData.Add(new ListViewDataModel { ResourceType=_activeResourceTypeId, Id = rdbKeyValue.Key, Name = rdbKeyValue.Value });
 
         }
         else
         {
-            foreach (var rdbKeyValue in RDBLoader.Instance.MeshNames)
+            foreach (var rdbKeyValue in RDBLoader.Instance.Names[(int)_activeResourceTypeId])
             {
                 if (!rdbKeyValue.Value.Contains(query))
                     continue;
 
-                listViewData.Add(new ListViewDataModel { Id = rdbKeyValue.Key, Name = rdbKeyValue.Value });
+                listViewData.Add(new ListViewDataModel { ResourceType = _activeResourceTypeId, Id = rdbKeyValue.Key, Name = rdbKeyValue.Value });
             }
         }
 
@@ -325,7 +315,7 @@ public class MainViewUxml
     {
         public string Name;
         public int Id;
-        public ResourceType ResourceType;
+        public ResourceTypeId ResourceType;
     }
 
     public class StatisticsDataModel

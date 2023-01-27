@@ -11,9 +11,8 @@ using static AODB.Common.DbClasses.RDBMesh_t;
 [CreateAssetMenu]
 public class RDBLoader : ScriptableSingleton<RDBLoader>
 {
-    public Dictionary<int, string> MeshNames = null;
+    public Dictionary<int, Dictionary<int, string>> Names = null;
 
-    private Dictionary<int, Dictionary<int, string>> Names = null;
     public bool IsOpen => _rdbController != null;
 
     private Settings _settings;
@@ -34,7 +33,8 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         if (Names == null)
         {
             Names = _rdbController.Get<InfoObject>(1).Types;
-            MeshNames = Names[(int)ResourceTypeId.RdbMesh].Where(x => _rdbController.RecordTypeToId[(int)ResourceTypeId.RdbMesh].ContainsKey((int)x.Key)).ToDictionary(x => x.Key, x => x.Value);
+            Names[(int)ResourceTypeId.RdbMesh] = Names[(int)ResourceTypeId.RdbMesh].Where(x => _rdbController.RecordTypeToId[(int)ResourceTypeId.RdbMesh].ContainsKey(x.Key)).ToDictionary(x => x.Key, x => x.Value);
+            Names[(int)ResourceTypeId.Texture] = Names[(int)ResourceTypeId.Texture].Where(x => _rdbController.RecordTypeToId[(int)ResourceTypeId.Texture].ContainsKey(x.Key)).ToDictionary(x => x.Key, x => x.Value);
         }
     }
 

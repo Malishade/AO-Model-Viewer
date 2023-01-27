@@ -12,6 +12,8 @@ public class SettingsManager : ScriptableSingleton<SettingsManager>
 {
     public static string SaveDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\\AOModelViewer";
     public static string SettingsFileName = "Settings.json";
+
+
     public Settings Settings;
 
     protected override void OnInitialize()
@@ -38,7 +40,7 @@ public class SettingsManager : ScriptableSingleton<SettingsManager>
         if (!Directory.Exists(SaveDirectory))
             Directory.CreateDirectory(SaveDirectory);
 
-        File.WriteAllText($"{SaveDirectory}\\{SettingsFileName}", JsonConvert.SerializeObject(this, Formatting.Indented));
+        File.WriteAllText($"{SaveDirectory}\\{SettingsFileName}", JsonConvert.SerializeObject(Settings, Formatting.Indented));
     }
 }
 
