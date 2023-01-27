@@ -112,15 +112,20 @@ public class PivotController : MonoBehaviour
 
     private void UpdateBoundsSensitivity(float boundsVolume)
     {
-        //Debug.Log(boundsVolume);
-
-        Quaternion mapValues = boundsVolume < 10 ?
-            new Quaternion(0, 10, 0.05f, 0.5f) :
+        Quaternion mapValues =     
+            boundsVolume < 0.1 ?
+            new Quaternion(0, 0.1f, 0.01f, 0.35f) :
+            boundsVolume < 10 ?
+            new Quaternion(0.1f, 10, 0.35f, 0.5f) :
             boundsVolume < 200 ?
             new Quaternion(10, 200, 0.5f, 0.75f) :
             boundsVolume < 1000 ?
             new Quaternion(200, 1000, 0.75f, 2f) :
-            new Quaternion(1000, 1822634, 2f, 10f);
+            boundsVolume < 10000 ?
+            new Quaternion(1000, 10000, 2f, 4f) :
+            boundsVolume < 40000 ?
+            new Quaternion(10000, 40000, 4f, 6f):
+            new Quaternion(40000, 1822634, 6f, 10f);
 
         _boundsSensitivity = Remap(boundsVolume, mapValues.x, mapValues.y, mapValues.z, mapValues.w);
     }

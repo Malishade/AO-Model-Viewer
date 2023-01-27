@@ -24,6 +24,7 @@ public class MainViewUxml
     private int _currentMatIndex;
     private MeshData _meshData;
     private Label _resultsLabel;
+    private TextField _searchBar;
 
     private Dictionary<string, ResourceType> _resourceTypeChoices = new()
     {
@@ -128,9 +129,15 @@ public class MainViewUxml
 
     private void InitSearchBar(VisualElement root)
     {
-        var searchBar = _root.Q<TextField>("SearchBar");
-        searchBar.RegisterCallback<ChangeEvent<string>>(TextUpdate);
+        _searchBar = _root.Q<TextField>("SearchBar");
+        _searchBar.SetEnabled(false);
+        _searchBar.RegisterCallback<ChangeEvent<string>>(TextUpdate);
+
+        var searchBarButtton = _root.Q<Button>("SearchBarClear");
+        searchBarButtton.RegisterCallback<ClickEvent>(ClearSearchBar);
     }
+
+    private void ClearSearchBar(ClickEvent evt) => _searchBar.value = "";
 
     private void TextUpdate(ChangeEvent<string> evt)
     {
@@ -236,6 +243,7 @@ public class MainViewUxml
         Debug.Log("Load!");
         RDBLoader.Instance.OpenDatabase();
         PopulateListView((ResourceType)_resourceTypeDropdown.index);
+        _searchBar.SetEnabled(true);
     }
 
     private void CloseClicked(DropdownMenuAction action)
@@ -246,7 +254,7 @@ public class MainViewUxml
 
     private void ExitClicked(DropdownMenuAction action)
     {
-        RDBLoader.Instance.CloseDatabase();
+        Application.Quit();
         Debug.Log("Exit!");
     }
 

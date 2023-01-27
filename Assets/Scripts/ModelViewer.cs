@@ -11,7 +11,7 @@ public class ModelViewer : MonoBehaviour
     [HideInInspector] public List<MeshRenderer> CurrentModelMeshes;
     public PivotController PivotController;
     [SerializeField] private float _offset = 1f;
-    [SerializeField] private int _targetFrameRate = 144;
+    [SerializeField] private int _targetFrameRate = 200;
 
     void Start()
     {

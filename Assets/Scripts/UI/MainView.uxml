@@ -11,7 +11,8 @@
                 <ui:ListView style="align-items: flex-start; justify-content: space-between; min-width: 0; opacity: 1; max-width: none; width: 100%; display: flex; height: 100%; border-left-width: 0; border-right-width: 0; border-top-width: 1px; border-bottom-width: 0;" />
                 <ui:GroupBox name="SearchBarContainer" style="margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; height: 26px; border-left-width: 0; border-right-width: 0; border-top-width: 1px; border-bottom-width: 0; border-top-color: rgb(33, 29, 29); flex-direction: row; justify-content: space-between;">
                     <ui:TextField picking-mode="Ignore" text="Search" name="SearchBar" style="height: auto; -unity-text-align: middle-left; transform-origin: center; align-items: center; margin-top: 1px; width: 197px;" />
-                    <ui:GroupBox style="flex-direction: row; width: 99px; justify-content: space-between; padding-top: 3px;">
+                    <ui:Button text="X" display-tooltip-when-elided="true" name="SearchBarClear" style="width: 17px; height: 17px; margin-left: -1px; margin-right: 0; margin-top: 4px; margin-bottom: 0; padding-left: 1px; padding-right: 0; padding-top: 2px; padding-bottom: 0; justify-content: center; align-items: center; -unity-text-align: middle-center; white-space: nowrap;" />
+                    <ui:GroupBox style="flex-direction: row; width: 99px; justify-content: space-between; padding-top: 3px; margin-left: 0;">
                         <ui:Label text="Results:" display-tooltip-when-elided="true" style="-unity-text-align: middle-left; white-space: nowrap;" />
                         <ui:Label text="0" display-tooltip-when-elided="true" name="ResultsLabel" style="-unity-text-align: middle-left; white-space: nowrap;" />
                     </ui:GroupBox>
