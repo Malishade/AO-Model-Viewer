@@ -53,6 +53,13 @@ public class MainViewUxml
         InitModelInspector(root);
 
         FixScrollSpeed();
+
+        SetResolution();
+    }
+
+    private void SetResolution()
+    {
+        Screen.SetResolution(1600, 720, false);
     }
 
     private void ExportClicked(DropdownMenuAction obj)

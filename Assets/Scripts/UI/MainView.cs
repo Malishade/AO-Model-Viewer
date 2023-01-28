@@ -4,9 +4,6 @@ using UnityEngine.UIElements;
 public class MainView : MonoBehaviour
 {
     [SerializeField]
-    private VisualTreeAsset _listViewEntryTemplate;
-
-    [SerializeField]
     private ModelViewer _modelViewer;
 
     [SerializeField]

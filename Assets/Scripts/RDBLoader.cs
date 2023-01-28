@@ -11,6 +11,7 @@ using UnityEngine;
 using static AODB.Common.DbClasses.RDBMesh_t;
 using Mesh = UnityEngine.Mesh;
 using Material = UnityEngine.Material;
+using Assimp.Unmanaged;
 
 [CreateAssetMenu]
 public class RDBLoader : ScriptableSingleton<RDBLoader>
@@ -24,6 +25,9 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
     protected override void OnInitialize()
     {
+#if UNITY_EDITOR
+        AssimpLibrary.Instance.LoadLibrary($"{Application.dataPath}\\Plugins\\assimp");
+#endif
         _settings = SettingsManager.Instance.Settings;
     }
 
