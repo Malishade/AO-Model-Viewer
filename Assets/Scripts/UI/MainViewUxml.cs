@@ -1,4 +1,6 @@
 using AODB;
+using AODB.RDBObjects;
+using Assimp;
 using ContextualMenuPlayer;
 using SFB;
 using System;
@@ -55,7 +57,21 @@ public class MainViewUxml
 
     private void ExportClicked(DropdownMenuAction obj)
     {
-        //_modelViewer.CurrentModel
+        if (_listView.selectedItem == null)
+            return;
+
+        ListViewDataModel selectedEntry = _listView.selectedItem as ListViewDataModel;
+
+        string defaultName = selectedEntry.Name.Replace(".abiff", ".fbx");
+
+        StandaloneFileBrowser.SaveFilePanelAsync("Export Resource", null, defaultName, "fbx", (path) =>
+        {
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
+                RDBLoader.Instance.ExportMesh(((ListViewDataModel)_listView.selectedItem).Id, path);
+        });
     }
 
     private void ImportClicked(DropdownMenuAction obj)
@@ -71,7 +87,7 @@ public class MainViewUxml
 
     private void OnEntryClicked(IEnumerable<object> obj)
     {
-        var selectedEntry = _listView.selectedItem as ListViewDataModel;
+        ListViewDataModel selectedEntry = _listView.selectedItem as ListViewDataModel;
 
         if (selectedEntry == null)
             return;

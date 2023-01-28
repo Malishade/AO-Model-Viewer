@@ -1,5 +1,7 @@
 using AODB;
+using AODB.Common;
 using AODB.RDBObjects;
+using Assimp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,6 +9,8 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using static AODB.Common.DbClasses.RDBMesh_t;
+using Mesh = UnityEngine.Mesh;
+using Material = UnityEngine.Material;
 
 [CreateAssetMenu]
 public class RDBLoader : ScriptableSingleton<RDBLoader>
@@ -45,6 +49,15 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
         _rdbController.Dispose();
     }
+
+    public void ExportMesh(int meshId, string path)
+    {
+        AssimpContext assimpContext = new AssimpContext();
+        RDBMesh mesh = _rdbController.Get<RDBMesh>(meshId);
+        Scene scene = AbiffConverter.CreateScene(mesh.RDBMesh_t);
+        bool exported = assimpContext.ExportFile(scene, path, "fbx");
+    }
+
 
     public List<GameObject> CreateAbiffMesh(int meshId)
     {
