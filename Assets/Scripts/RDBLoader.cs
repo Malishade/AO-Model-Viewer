@@ -56,12 +56,33 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
     public void ExportMesh(int meshId, string path)
     {
-        AssimpContext assimpContext = new AssimpContext();
         RDBMesh mesh = _rdbController.Get<RDBMesh>(meshId);
-        Scene scene = AbiffConverter.CreateScene(mesh.RDBMesh_t);
-        bool exported = assimpContext.ExportFile(scene, path, "fbx");
+        Scene scene = AbiffConverter.ToAssimpScene(mesh.RDBMesh_t);
+
+        foreach (Assimp.Material mat in scene.Materials)
+        {
+            ExportTexture(path, mat.GetNonTextureProperty("TexId").GetIntegerValue(), out string texName);
+
+            TextureSlot diffuse = new TextureSlot
+            {
+                FilePath = texName,
+                TextureType = TextureType.Diffuse,
+            };
+
+            if (mat.HasNonTextureProperty("ApplyAlpha"))
+                diffuse.Flags = (int)TextureFlags.UseAlpha;
+
+            mat.TextureDiffuse = diffuse;
+        }
+
+        new AssimpContext().ExportFile(scene, path, "fbx");
     }
 
+    public void ExportTexture(string exportPath, int texId, out string texName)
+    {
+        texName = Names[(int)ResourceTypeId.Texture].TryGetValue(texId, out string rdbName) ? rdbName.Trim('\0') : $"UnnamedTex_{texId}";
+        File.WriteAllBytes($"{Path.GetDirectoryName(exportPath)}\\{texName}", _rdbController.Get<AOTexture>(texId).JpgData);
+    }
 
     public List<GameObject> CreateAbiffMesh(int meshId)
     {
