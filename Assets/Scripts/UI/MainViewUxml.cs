@@ -35,11 +35,10 @@ public class MainViewUxml
         { "Textures (.png)", ResourceTypeId.Texture },
         //{ "Characters (.cir)", ResourceTypeId.RdbMesh },
     };
-
+    private VisualElement _modelViewerContainer;
     public MainViewUxml(VisualElement root, ModelViewer modelViewer)
     {
         _settings = SettingsManager.Instance.Settings;
-
         _root = root;
         _menuManager = new ContextualMenuManager();
         _modelViewer = modelViewer;
@@ -51,15 +50,8 @@ public class MainViewUxml
         InitFileMenu(root);
         InitSearchBar(root);
         InitModelInspector(root);
-
+        InitRightContainer(root);
         FixScrollSpeed();
-
-        SetResolution();
-    }
-
-    private void SetResolution()
-    {
-        Screen.SetResolution(1600, 720, false);
     }
 
     private void ExportClicked(DropdownMenuAction obj)
@@ -99,19 +91,19 @@ public class MainViewUxml
         if (selectedEntry == null)
             return;
 
+
         switch (selectedEntry.ResourceType)
         {
             case ResourceTypeId.RdbMesh:
                 var rdbMesh = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
                 _modelViewer.InitUpdateRdbMesh(rdbMesh);
-                _modelViewer.CurrentModelMeshes.GetMeshData(out _meshData);
-                _statisticsDataModel.Vertices.text = _meshData.VerticesCount.ToString();
-                _statisticsDataModel.Tris.text = _meshData.TrianglesCount.ToString();
+                 _statisticsDataModel.Vertices.text = _modelViewer.CurrentModelData.VerticesCount.ToString();
+                 _statisticsDataModel.Tris.text = _modelViewer.CurrentModelData.TrianglesCount.ToString();
                 MaterialChangeAction(_activeMatTypeId);
                 break;
             case ResourceTypeId.Texture:
                 var rdbMat = RDBLoader.Instance.LoadMaterial(selectedEntry.Id);
-                _modelViewer.InitUpdateTexture(rdbMat);
+                _modelViewer.InitUpdateRdbTexture(rdbMat);
                 break;
         }
 
@@ -140,16 +132,10 @@ public class MainViewUxml
 
     private void MaterialChangeAction(MaterialTypeId index)
     {
-        if (_modelViewer.CurrentModelRoot == null)
+        if (_modelViewer.CurrentModelData.Root == null)
             return;
 
-        var currMat = _modelViewer.RenderMaterials.RendererMaterials.First(x => x.Index == index).Material;
-
-        foreach (var s in _meshData.MeshRendererData)
-        {
-            s.Key.material = currMat;
-            s.Key.material.SetTexture("_MainTex", s.Value);
-        }
+        _modelViewer.UpdateMaterial(index);
     }
 
     private void InitSearchBar(VisualElement root)
@@ -228,7 +214,7 @@ public class MainViewUxml
                 _listView.UnregisterCallback<PointerEnterEvent>(OnMouseEnter);
                 _listView.UnregisterCallback<PointerLeaveEvent>(OnMouseLeave);
                 _modelViewer.PivotController.DisableMouseInput = true;
-                _modelViewer.PivotController.RenderCamera.orthographic = true;
+               // _modelViewer.PivotController.RenderCamera.orthographic = true;
                 _modelInspectorFoldout.style.display = DisplayStyle.None;
                 break;
         }
@@ -271,6 +257,31 @@ public class MainViewUxml
         };
 
         _menuManager.DisplayMenu(creationContext);
+    }
+
+    private void InitRightContainer(VisualElement root)
+    {
+        var rightContainer = root.Q<VisualElement>("RightContainer");
+        rightContainer.RegisterCallback<GeometryChangedEvent>(GeometryChange);
+
+        _modelViewerContainer = root.Q<VisualElement>("ModelViewerContainer");
+    }
+
+    private void GeometryChange(GeometryChangedEvent evt)
+    {
+        var container = (VisualElement)evt.target;
+        Vector2 visibleArea = new Vector2(container.contentRect.width, container.contentRect.height);
+
+        Vector2 aspectRatioArea = visibleArea.x / visibleArea.y < 16f / 9f ?
+            new Vector2(Mathf.FloorToInt(visibleArea.y * 16f / 9f), Mathf.FloorToInt(visibleArea.y)) :
+            new Vector2(Mathf.FloorToInt(visibleArea.x), Mathf.FloorToInt(visibleArea.x * 9f / 16f));
+
+        _modelViewerContainer.style.height = aspectRatioArea.y;
+        _modelViewerContainer.style.width = aspectRatioArea.x;
+
+        var moveVector = new Vector3(visibleArea.x / aspectRatioArea.x, visibleArea.y / aspectRatioArea.y, 0);
+
+        _modelViewer.UpdateModelViewer(moveVector);
     }
 
     private void SetAODirectoryClicked(DropdownMenuAction action)
@@ -377,7 +388,6 @@ public class MainViewUxml
 
     public class MeshData
     {
-        public Dictionary<MeshRenderer, Texture> MeshRendererData;
         public int VerticesCount;
         public int TrianglesCount;
     }

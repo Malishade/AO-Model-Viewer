@@ -18,26 +18,24 @@
                     </ui:GroupBox>
                 </ui:GroupBox>
             </ui:GroupBox>
-            <ui:GroupBox style="width: 100%; height: 100%; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 322px; padding-top: 0; padding-bottom: 1px; justify-content: space-between; background-color: rgba(0, 0, 0, 0); flex-direction: row; flex-shrink: 0; flex-basis: auto; position: relative;">
-                <ui:GroupBox style="min-width: auto; min-height: auto; width: 100%; height: 100%; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; justify-content: space-between; background-color: rgb(56, 56, 56); flex-direction: row; align-items: stretch;">
-                    <ui:Image name="RightContainer" style="flex-direction: column; justify-content: center; align-items: center; height: 0; width: 100%; background-image: url(&apos;project://database/Assets/Materials/ViewportRenderTexture.renderTexture?fileID=8400000&amp;guid=52bc14e4876a8944aa14e24659bbd43b&amp;type=2#ViewportRenderTexture&apos;); background-color: rgb(34, 34, 34); min-width: 0; min-height: 0; position: absolute; padding-top: 56.25%; margin-top: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;" />
-                    <ui:Foldout text="Model Inspector" name="ModelInspector" value="true" style="flex-direction: column; justify-content: flex-start; align-items: flex-start; transform-origin: left top; padding-top: 0; flex-wrap: nowrap; -unity-text-align: middle-left; overflow: visible; translate: 0 0; rotate: 0; width: auto; flex-basis: auto; height: auto; min-height: 0; margin-top: 0; flex-shrink: 1; flex-grow: 1; margin-left: 0; margin-right: 0; margin-bottom: 0; min-width: 0;">
-                        <ui:GroupBox text="MATERIAL" style="margin-left: -5px; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 10px; padding-bottom: 10px;">
-                            <ui:RadioButtonGroup value="0" name="MaterialButtonGroup" choices="Base Color,Unlit,Wireframe,MatCap 1,MatCap 2,MatCap 3" style="flex-direction: column; height: auto; font-size: 12px; padding-top: 0; margin-bottom: 1px; opacity: 1; margin-left: 4px; margin-right: 3px; margin-top: 6px; padding-left: 0; padding-right: 0; padding-bottom: 0;" />
-                        </ui:GroupBox>
-                        <ui:GroupBox text="STATISTICS" style="margin-left: -5px; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 10px; padding-bottom: 10px; width: 120px;">
-                            <ui:GroupBox style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 4px;">
-                                <ui:GroupBox text="Vertices:" style="flex-direction: row; padding-top: 0; padding-left: 0; padding-right: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 5px; margin-bottom: 2px; justify-content: space-between;">
-                                    <ui:Label text="0" display-tooltip-when-elided="true" name="VerticesCount" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0;" />
-                                </ui:GroupBox>
-                                <ui:GroupBox text="Tris:" style="flex-direction: row; margin-left: 0; margin-right: 0; margin-top: 5px; margin-bottom: 2px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; justify-content: space-between;">
-                                    <ui:Label text="0" display-tooltip-when-elided="true" name="EdgesCount" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;" />
-                                </ui:GroupBox>
-                            </ui:GroupBox>
-                        </ui:GroupBox>
-                    </ui:Foldout>
-                </ui:GroupBox>
+            <ui:GroupBox name="RightContainer" style="width: 100%; height: 100%; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 322px; padding-top: 0; padding-bottom: 0; justify-content: space-between; background-color: rgba(0, 0, 0, 0); flex-direction: row; flex-shrink: 0; flex-basis: auto; position: relative;">
+                <ui:Image name="ModelViewerContainer" style="flex-direction: column; justify-content: center; align-items: center; height: 100%; width: 100%; background-image: url(&apos;project://database/Assets/Materials/ViewportRenderTexture.renderTexture?fileID=8400000&amp;guid=52bc14e4876a8944aa14e24659bbd43b&amp;type=2#ViewportRenderTexture&apos;); background-color: rgb(34, 34, 34); min-width: 0; min-height: 0; position: absolute; padding-top: 0; margin-top: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; padding-left: 0; padding-right: 0; padding-bottom: 0;" />
             </ui:GroupBox>
         </ui:GroupBox>
     </ui:GroupBox>
+    <ui:Foldout text="Model Inspector" name="ModelInspector" value="true" style="flex-direction: column; justify-content: flex-start; align-items: flex-start; transform-origin: left top; padding-top: 0; flex-wrap: nowrap; -unity-text-align: middle-left; overflow: visible; translate: 322px 0; rotate: 0; width: auto; flex-basis: auto; height: auto; min-height: 0; margin-top: 0; flex-shrink: 1; flex-grow: 1; margin-left: 0; margin-right: 0; margin-bottom: 0; min-width: 0; position: absolute;">
+        <ui:GroupBox text="MATERIAL" style="margin-left: -5px; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 10px; padding-bottom: 10px;">
+            <ui:RadioButtonGroup value="0" name="MaterialButtonGroup" choices="Base Color,Unlit,Wireframe,MatCap 1,MatCap 2,MatCap 3" style="flex-direction: column; height: auto; font-size: 12px; padding-top: 0; margin-bottom: 1px; opacity: 1; margin-left: 4px; margin-right: 3px; margin-top: 6px; padding-left: 0; padding-right: 0; padding-bottom: 0;" />
+        </ui:GroupBox>
+        <ui:GroupBox text="STATISTICS" style="margin-left: -5px; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 10px; padding-bottom: 10px; width: 120px;">
+            <ui:GroupBox style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 4px;">
+                <ui:GroupBox text="Vertices:" style="flex-direction: row; padding-top: 0; padding-left: 0; padding-right: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 5px; margin-bottom: 2px; justify-content: space-between;">
+                    <ui:Label text="0" display-tooltip-when-elided="true" name="VerticesCount" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0;" />
+                </ui:GroupBox>
+                <ui:GroupBox text="Tris:" style="flex-direction: row; margin-left: 0; margin-right: 0; margin-top: 5px; margin-bottom: 2px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; justify-content: space-between;">
+                    <ui:Label text="0" display-tooltip-when-elided="true" name="EdgesCount" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;" />
+                </ui:GroupBox>
+            </ui:GroupBox>
+        </ui:GroupBox>
+    </ui:Foldout>
 </ui:UXML>

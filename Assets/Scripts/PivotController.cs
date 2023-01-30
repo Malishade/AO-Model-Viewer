@@ -4,6 +4,7 @@ using UnityEngine;
 public class PivotController : MonoBehaviour
 {
     [SerializeField] public Camera RenderCamera;
+    [HideInInspector] public bool DisableMouseInput = false;
     [SerializeField] private float _sensitivity = 10f;
     [SerializeField] private float _smoothness = 10f;
 
@@ -17,12 +18,9 @@ public class PivotController : MonoBehaviour
     private float _mouseInputY => Input.GetAxis("Mouse Y") * _deltaSensitivity;
     private float _mouseInputScroll => Input.GetAxis("Mouse ScrollWheel") * _deltaSensitivity;
 
-    private float _boundsSensitivity;
-
     private float _sensitivityConst = 0.25f;
     private float _deltaSensitivity => _sensitivity * _sensitivityConst;
     private float _deltaSmoothness => _smoothness * Time.deltaTime;
-    [HideInInspector] public bool DisableMouseInput = false;
 
     private void Update()
     {
@@ -67,7 +65,7 @@ public class PivotController : MonoBehaviour
         if (!Input.GetMouseButton(1))
             return;
 
-        var mouseMoveAxis = new Vector3(_mouseInputX, _mouseInputY, 0) / 10 * _boundsSensitivity;
+        var mouseMoveAxis = new Vector3(_mouseInputX, _mouseInputY, 0) / 10;
 
         _localPosition += mouseMoveAxis;
     }
@@ -85,7 +83,7 @@ public class PivotController : MonoBehaviour
         if (!(Input.GetAxis("Mouse ScrollWheel") != 0f))
             return;
 
-        var mouseScrollAxis = Vector3.forward * _mouseInputScroll * 2f * _boundsSensitivity;
+        var mouseScrollAxis = Vector3.forward * _mouseInputScroll * 2f;
 
         _localPosition -= mouseScrollAxis;
     }
@@ -98,41 +96,13 @@ public class PivotController : MonoBehaviour
         _localPosition.z = Mathf.Clamp(_localPosition.z, RenderCamera.transform.position.z, 100);
         transform.position = Vector3.Lerp(transform.position, new Vector3(transform.position.x, transform.position.y, _localPosition.z), _deltaSmoothness);
     }
-    public void UpdateData(Bounds newBounds)
+
+    public void UpdateData(Bounds modelBounds)
     {
+        transform.position = Vector3.forward * modelBounds.extents.z;
         transform.rotation = Quaternion.identity;
+
         _localRotation = Vector2.zero;
-
-        transform.position = newBounds.center;
         _localPosition = transform.position;
-
-        float boundsVolume = newBounds.size.x * newBounds.size.y * newBounds.size.z;
-        UpdateBoundsSensitivity(boundsVolume);
-    }
-
-    private void UpdateBoundsSensitivity(float boundsVolume)
-    {
-        Quaternion mapValues =     
-            boundsVolume < 0.1 ?
-            new Quaternion(0, 0.1f, 0.01f, 0.35f) :
-            boundsVolume < 10 ?
-            new Quaternion(0.1f, 10, 0.35f, 0.5f) :
-            boundsVolume < 200 ?
-            new Quaternion(10, 200, 0.5f, 0.75f) :
-            boundsVolume < 1000 ?
-            new Quaternion(200, 1000, 0.75f, 2f) :
-            boundsVolume < 10000 ?
-            new Quaternion(1000, 10000, 2f, 4f) :
-            boundsVolume < 40000 ?
-            new Quaternion(10000, 40000, 4f, 6f):
-            new Quaternion(40000, 1822634, 6f, 10f);
-
-        _boundsSensitivity = Remap(boundsVolume, mapValues.x, mapValues.y, mapValues.z, mapValues.w);
-    }
-
-    public float Remap(float input, float oldLow, float oldHigh, float newLow, float newHigh)
-    {
-        float t = Mathf.InverseLerp(oldLow, oldHigh, input);
-        return Mathf.Lerp(newLow, newHigh, t);
     }
 }
