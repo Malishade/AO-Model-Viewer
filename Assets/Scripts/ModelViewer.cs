@@ -48,7 +48,7 @@ public class ModelViewer : MonoBehaviour
         UpdateModelViewer();
     }
 
-    public void InitUpdateRdbMesh(List<GameObject> meshes)
+    public void InitUpdateRdbMesh(GameObject meshes)
     {
         CurrentModelData.SetMeshData(meshes);
         UpdateModelViewer();
@@ -194,20 +194,21 @@ public class CurrentModelData
     //        meshData.TrianglesCount += meshFilter.sharedMesh.triangles.Length/3;
     //    }
     //}
-    public void SetMeshData(List<GameObject> gameObjects)
+    public void SetMeshData(GameObject gameObject)
     {
         Dictionary<MeshRenderer, Texture> meshRenderers = new Dictionary<MeshRenderer, Texture>();
 
-        foreach (var gameObject in gameObjects)
+        foreach (MeshRenderer child in gameObject.transform.GetComponentsInChildren<MeshRenderer>())
         {
-            foreach (MeshRenderer child in gameObject.transform.GetComponentsInChildren<MeshRenderer>())
-            {
-                var texture = child.material.GetTexture("_MainTex");
-                var meshFilter = gameObject.GetComponent<MeshFilter>();
-                VerticesCount += meshFilter.sharedMesh.vertexCount;
-                TrianglesCount += meshFilter.sharedMesh.triangles.Length / 3;
-                meshRenderers.Add(child, texture);
-            }
+            var meshFilter = child.GetComponent<MeshFilter>();
+
+            if (meshFilter == null)
+                continue;
+
+            var texture = child.material.GetTexture("_MainTex");
+            VerticesCount += meshFilter.sharedMesh.vertexCount;
+            TrianglesCount += meshFilter.sharedMesh.triangles.Length / 3;
+            meshRenderers.Add(child, texture);
         }
 
         MeshRenderers = meshRenderers;

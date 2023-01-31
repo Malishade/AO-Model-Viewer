@@ -9,8 +9,11 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using static AODB.Common.DbClasses.RDBMesh_t;
-using Mesh = UnityEngine.Mesh;
 using Material = UnityEngine.Material;
+using Mesh = UnityEngine.Mesh;
+using AMesh = Assimp.Mesh;
+using AMaterial = Assimp.Material;
+using AMaterialProperty = Assimp.MaterialProperty;
 using Assimp.Unmanaged;
 
 [CreateAssetMenu]
@@ -59,20 +62,35 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         RDBMesh mesh = _rdbController.Get<RDBMesh>(meshId);
         Scene scene = AbiffConverter.ToAssimpScene(mesh.RDBMesh_t);
 
-        foreach (Assimp.Material mat in scene.Materials)
+        foreach (AMaterial mat in scene.Materials)
         {
-            ExportTexture(path, mat.GetNonTextureProperty("TexId").GetIntegerValue(), out string texName);
-
-            TextureSlot diffuse = new TextureSlot
+            if (mat.HasNonTextureProperty("DiffuseId"))
             {
-                FilePath = texName,
-                TextureType = TextureType.Diffuse,
-            };
+                ExportTexture(path, mat.GetNonTextureProperty("DiffuseId").GetIntegerValue(), out string diffuseName);
 
-            if (mat.HasNonTextureProperty("ApplyAlpha"))
-                diffuse.Flags = (int)TextureFlags.UseAlpha;
+                TextureSlot diffuse = new TextureSlot
+                {
+                    FilePath = diffuseName,
+                    TextureType = TextureType.Diffuse,
+                    TextureIndex = 0
+                };
 
-            mat.TextureDiffuse = diffuse;
+                AddMaterialTexture(mat, ref diffuse, false);
+            }
+
+            if (mat.HasNonTextureProperty("EmissionId"))
+            {
+                ExportTexture(path, mat.GetNonTextureProperty("EmissionId").GetIntegerValue(), out string emissionName);
+
+                TextureSlot emission = new TextureSlot
+                {
+                    FilePath = emissionName,
+                    TextureType = TextureType.Emissive,
+                    TextureIndex = 0,
+                };
+
+                AddMaterialTexture(mat, ref emission, false);
+            }
         }
 
         new AssimpContext().ExportFile(scene, path, "fbx");
@@ -84,7 +102,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         File.WriteAllBytes($"{Path.GetDirectoryName(exportPath)}\\{texName}", _rdbController.Get<AOTexture>(texId).JpgData);
     }
 
-    public List<GameObject> CreateAbiffMesh(int meshId)
+    public List<GameObject> CreateAbiffMeshOld(int meshId)
     {
         Debug.Log($"Loading mesh {meshId}");
         List<GameObject> meshes = new List<GameObject>();
@@ -107,7 +125,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
             };
 
             if (mesh.Material != null)
-                submeshObj.AddComponent<MeshRenderer>().material = LoadMaterial((int)mesh.Material.Texture);
+                submeshObj.AddComponent<MeshRenderer>().material = LoadMaterialOld((int)mesh.Material.Texture);
 
             submeshObj.transform.position = mesh.BasePos.ToUnity();
             submeshObj.transform.rotation = mesh.BaseRotation.ToUnity();
@@ -119,7 +137,90 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         return meshes;
     }
 
-    public Material LoadMaterial(int texId)
+    public GameObject CreateAbiffMesh(int meshId)
+    {
+        Debug.Log($"Loading mesh {meshId}");
+
+        RDBMesh rdbMesh = _rdbController.Get<RDBMesh>(meshId);
+        Scene scene = AbiffConverter.ToAssimpScene(rdbMesh.RDBMesh_t);
+
+        return CreateNode(scene, scene.RootNode);
+    }
+
+    private GameObject CreateNode(Scene scene, Node node)
+    {
+        GameObject nodeObj = new GameObject(node.Name);
+
+        if(node.HasMeshes)
+        {
+            foreach (var meshIdx in node.MeshIndices)
+            {
+                GameObject submeshObj = new GameObject("MeshPart");
+                MeshFilter meshFilter = submeshObj.AddComponent<MeshFilter>();
+                meshFilter.mesh = CreateMesh(scene.Meshes[meshIdx]);
+
+                AMaterial material = scene.Materials[scene.Meshes[meshIdx].MaterialIndex];
+
+                submeshObj.AddComponent<MeshRenderer>().material = LoadMaterial(material);
+                submeshObj.transform.parent = nodeObj.transform;
+            }
+        }
+
+        foreach (Node child in node.Children)
+        {
+            GameObject childObj = CreateNode(scene, child);
+            childObj.transform.parent = nodeObj.transform;
+        }
+
+        return nodeObj;
+    }
+
+    public Mesh CreateMesh(AMesh mesh)
+    {
+        return new Mesh()
+        {
+            vertices = mesh.Vertices.ToUnityArray(),
+            triangles = mesh.GetIndices(),
+            normals = mesh.Normals.ToUnityArray(),
+            uv = mesh.TextureCoordinateChannels[0].ToUnity2DArray(),
+        };
+    }
+
+    public Material LoadMaterial(AMaterial material)
+    {
+        Material unityMat = new Material(Shader.Find("Diffuse"));
+
+        if (material.HasNonTextureProperty("ApplyAlpha"))
+        {
+            unityMat.SetFloat("_mode", material.GetNonTextureProperty("ApplyAlpha").GetBooleanValue() ? 1 : 0);
+        }
+
+        if (material.HasNonTextureProperty("DiffuseId"))
+        {
+            int diffuseId = material.GetNonTextureProperty("DiffuseId").GetIntegerValue();
+            Debug.Log($"Loading diffuse texture {diffuseId}");
+            Texture2D diffuseTex = new Texture2D(1, 1);
+            diffuseTex.LoadImage(_rdbController.Get<AOTexture>(diffuseId).JpgData);
+
+            unityMat.mainTexture = diffuseTex;
+        }
+
+        if (material.HasNonTextureProperty("EmissionId"))
+        {
+            int emissionId = material.GetNonTextureProperty("EmissionId").GetIntegerValue();
+            Debug.Log($"Loading emission texture {emissionId}");
+            Texture2D emissionTex = new Texture2D(1, 1);
+            emissionTex.LoadImage(_rdbController.Get<AOTexture>(emissionId).JpgData);
+
+            unityMat.EnableKeyword("_EMISSION");
+            unityMat.SetTexture("_EmissionMap", emissionTex);
+            unityMat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+        }
+
+        return unityMat;
+    }
+
+    public Material LoadMaterialOld(int texId)
     {
         Debug.Log($"Loading texture {texId}");
         Texture2D tex = new Texture2D(1, 1);
@@ -130,4 +231,128 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
         return mat;
     }
+
+    public bool AddMaterialTexture(AMaterial mat, ref TextureSlot texture, bool onlySetFilePath)
+    {
+        if (string.IsNullOrEmpty(texture.FilePath))
+            return false;
+
+        TextureType texType = texture.TextureType;
+        int texIndex = texture.TextureIndex;
+
+        string texName = AMaterial.CreateFullyQualifiedName(AiMatKeys.TEXTURE_BASE, texType, texIndex);
+
+        AMaterialProperty texNameProp = mat.GetProperty(texName);
+
+        if (texNameProp == null)
+            mat.AddProperty(new AMaterialProperty(AiMatKeys.TEXTURE_BASE, texture.FilePath, texType, texIndex));
+        else
+            texNameProp.SetStringValue(texture.FilePath);
+
+        if (onlySetFilePath)
+            return true;
+
+        string mappingName = AMaterial.CreateFullyQualifiedName(AiMatKeys.MAPPING_BASE, texType, texIndex);
+        string uvIndexName = AMaterial.CreateFullyQualifiedName(AiMatKeys.UVWSRC_BASE, texType, texIndex);
+        string blendFactorName = AMaterial.CreateFullyQualifiedName(AiMatKeys.TEXBLEND_BASE, texType, texIndex);
+        string texOpName = AMaterial.CreateFullyQualifiedName(AiMatKeys.TEXOP_BASE, texType, texIndex);
+        string uMapModeName = AMaterial.CreateFullyQualifiedName(AiMatKeys.MAPPINGMODE_U_BASE, texType, texIndex);
+        string vMapModeName = AMaterial.CreateFullyQualifiedName(AiMatKeys.MAPPINGMODE_V_BASE, texType, texIndex);
+        string texFlagsName = AMaterial.CreateFullyQualifiedName(AiMatKeys.TEXFLAGS_BASE, texType, texIndex);
+
+        AMaterialProperty mappingNameProp = mat.GetProperty(mappingName);
+        AMaterialProperty uvIndexNameProp = mat.GetProperty(uvIndexName);
+        AMaterialProperty blendFactorNameProp = mat.GetProperty(blendFactorName);
+        AMaterialProperty texOpNameProp = mat.GetProperty(texOpName);
+        AMaterialProperty uMapModeNameProp = mat.GetProperty(uMapModeName);
+        AMaterialProperty vMapModeNameProp = mat.GetProperty(vMapModeName);
+        AMaterialProperty texFlagsNameProp = mat.GetProperty(texFlagsName);
+
+        if (mappingNameProp == null)
+        {
+            mappingNameProp = new AMaterialProperty(AiMatKeys.MAPPING_BASE, (int)texture.Mapping);
+            mappingNameProp.TextureIndex = texIndex;
+            mappingNameProp.TextureType = texType;
+            mat.AddProperty(mappingNameProp);
+        }
+        else
+        {
+            mappingNameProp.SetIntegerValue((int)texture.Mapping);
+        }
+
+        if (uvIndexNameProp == null)
+        {
+            uvIndexNameProp = new AMaterialProperty(AiMatKeys.UVWSRC_BASE, texture.UVIndex);
+            uvIndexNameProp.TextureIndex = texIndex;
+            uvIndexNameProp.TextureType = texType;
+            mat.AddProperty(uvIndexNameProp);
+        }
+        else
+        {
+            uvIndexNameProp.SetIntegerValue(texture.UVIndex);
+        }
+
+        if (blendFactorNameProp == null)
+        {
+            blendFactorNameProp = new AMaterialProperty(AiMatKeys.TEXBLEND_BASE, texture.BlendFactor);
+            blendFactorNameProp.TextureIndex = texIndex;
+            blendFactorNameProp.TextureType = texType;
+            mat.AddProperty(blendFactorNameProp);
+        }
+        else
+        {
+            blendFactorNameProp.SetFloatValue(texture.BlendFactor);
+        }
+
+        if (texOpNameProp == null)
+        {
+            texOpNameProp = new AMaterialProperty(AiMatKeys.TEXOP_BASE, (int)texture.Operation);
+            texOpNameProp.TextureIndex = texIndex;
+            texOpNameProp.TextureType = texType;
+            mat.AddProperty(texOpNameProp);
+        }
+        else
+        {
+            texOpNameProp.SetIntegerValue((int)texture.Operation);
+        }
+
+        if (uMapModeNameProp == null)
+        {
+            uMapModeNameProp = new AMaterialProperty(AiMatKeys.MAPPINGMODE_U_BASE, (int)texture.WrapModeU);
+            uMapModeNameProp.TextureIndex = texIndex;
+            uMapModeNameProp.TextureType = texType;
+            mat.AddProperty(uMapModeNameProp);
+        }
+        else
+        {
+            uMapModeNameProp.SetIntegerValue((int)texture.WrapModeU);
+        }
+
+        if (vMapModeNameProp == null)
+        {
+            vMapModeNameProp = new AMaterialProperty(AiMatKeys.MAPPINGMODE_V_BASE, (int)texture.WrapModeV);
+            vMapModeNameProp.TextureIndex = texIndex;
+            vMapModeNameProp.TextureType = texType;
+            mat.AddProperty(vMapModeNameProp);
+        }
+        else
+        {
+            vMapModeNameProp.SetIntegerValue((int)texture.WrapModeV);
+        }
+
+        if (texFlagsNameProp == null)
+        {
+            texFlagsNameProp = new AMaterialProperty(AiMatKeys.TEXFLAGS_BASE, texture.Flags);
+            texFlagsNameProp.TextureIndex = texIndex;
+            texFlagsNameProp.TextureType = texType;
+            mat.AddProperty(texFlagsNameProp);
+        }
+        else
+        {
+            texFlagsNameProp.SetIntegerValue(texture.Flags);
+        }
+
+        return true;
+    }
+
 }

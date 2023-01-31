@@ -102,7 +102,7 @@ public class MainViewUxml
                 MaterialChangeAction(_activeMatTypeId);
                 break;
             case ResourceTypeId.Texture:
-                var rdbMat = RDBLoader.Instance.LoadMaterial(selectedEntry.Id);
+                var rdbMat = RDBLoader.Instance.LoadMaterialOld(selectedEntry.Id);
                 _modelViewer.InitUpdateRdbTexture(rdbMat);
                 break;
         }
@@ -233,7 +233,7 @@ public class MainViewUxml
         _fileDropdownMenu.AppendSeparator();
         _fileDropdownMenu.AppendAction($"Close Database", CloseClicked, CloseStatusCallback);
         _fileDropdownMenu.AppendSeparator();
-        _fileDropdownMenu.AppendAction("Import", ImportClicked, DropdownMenuAction.AlwaysEnabled);
+        //_fileDropdownMenu.AppendAction("Import", ImportClicked, DropdownMenuAction.AlwaysEnabled);
         _fileDropdownMenu.AppendAction("Export", ExportClicked, DropdownMenuAction.AlwaysEnabled);
         _fileDropdownMenu.AppendSeparator();
         _fileDropdownMenu.AppendAction($"Exit", ExitClicked, DropdownMenuAction.AlwaysEnabled);
