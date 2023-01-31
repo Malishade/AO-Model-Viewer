@@ -14,6 +14,7 @@ using Mesh = UnityEngine.Mesh;
 using AMesh = Assimp.Mesh;
 using AMaterial = Assimp.Material;
 using AMaterialProperty = Assimp.MaterialProperty;
+using AQuaternion = Assimp.Quaternion;
 using Assimp.Unmanaged;
 
 [CreateAssetMenu]
@@ -150,6 +151,11 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
     private GameObject CreateNode(Scene scene, Node node)
     {
         GameObject nodeObj = new GameObject(node.Name);
+
+        node.Transform.Decompose(out Vector3D scale, out AQuaternion rotation, out Vector3D position);
+        nodeObj.transform.localScale = new Vector3(scale.X, scale.Y, scale.Z);
+        nodeObj.transform.rotation = new UnityEngine.Quaternion(rotation.X, rotation.Y, rotation.Z, rotation.W);
+        nodeObj.transform.position = new Vector3(position.X, position.Y, position.Z);
 
         if(node.HasMeshes)
         {
