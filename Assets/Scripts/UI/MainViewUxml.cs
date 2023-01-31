@@ -132,7 +132,7 @@ public class MainViewUxml
 
     private void MaterialChangeAction(MaterialTypeId index)
     {
-        if (_modelViewer.CurrentModelData.Root == null)
+        if (_modelViewer.CurrentModelData.PivotRoot == null)
             return;
 
         _modelViewer.UpdateMaterial(index);

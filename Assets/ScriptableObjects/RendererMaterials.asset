@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   RendererMaterials:
   - Index: 0
-    Material: {fileID: 2100000, guid: c855dcf8764c45b44ab21dac4a5b80a4, type: 2}
+    Material: {fileID: 0}
   - Index: 1
     Material: {fileID: 2100000, guid: 8f347b0436a9a024e90faf479320f9b0, type: 2}
   - Index: 2

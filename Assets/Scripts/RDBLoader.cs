@@ -194,7 +194,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
     public Material LoadMaterial(AMaterial material)
     {
-        Material unityMat = new Material(Shader.Find("Diffuse"));
+        Material unityMat = new Material(Shader.Find("Standard"));
 
         if (material.HasNonTextureProperty("ApplyAlpha"))
         {
@@ -208,6 +208,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
             Texture2D diffuseTex = new Texture2D(1, 1);
             diffuseTex.LoadImage(_rdbController.Get<AOTexture>(diffuseId).JpgData);
 
+            unityMat.SetFloat("_Glossiness", 0.35f);
             unityMat.mainTexture = diffuseTex;
         }
 
@@ -218,7 +219,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
             Texture2D emissionTex = new Texture2D(1, 1);
             emissionTex.LoadImage(_rdbController.Get<AOTexture>(emissionId).JpgData);
 
-            unityMat.EnableKeyword("_EMISSION");
+            unityMat.EnableKeyword("_Emission");
             unityMat.SetTexture("_EmissionMap", emissionTex);
             unityMat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
         }
@@ -232,7 +233,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         Texture2D tex = new Texture2D(1, 1);
         tex.LoadImage(_rdbController.Get<AOTexture>(texId).JpgData);
 
-        Material mat = new Material(Shader.Find("Diffuse"));
+        Material mat = new Material(Shader.Find("Standard"));
         mat.mainTexture = tex;
 
         return mat;

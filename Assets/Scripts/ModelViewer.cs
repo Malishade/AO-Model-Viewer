@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Material = UnityEngine.Material;
 
 public class ModelViewer : MonoBehaviour
 {
@@ -43,7 +44,7 @@ public class ModelViewer : MonoBehaviour
 
         mesh.transform.localScale = adjustedScale;
 
-        CurrentModelData.MeshRenderers = new Dictionary<MeshRenderer, Texture> { { meshRenderer, texture } };
+        CurrentModelData.DiffuseMaterials = new Dictionary<MeshRenderer, Material> { { meshRenderer, meshRenderer.material } };
 
         UpdateModelViewer();
     }
@@ -56,8 +57,6 @@ public class ModelViewer : MonoBehaviour
 
     private void UpdateModelViewer()
     {
-        CurrentModelData.RecalculateBounds();
-
         DestroyCurrentModel();
         SetupNewModel();
         UpdateParents();
@@ -66,27 +65,29 @@ public class ModelViewer : MonoBehaviour
 
     public void DestroyCurrentModel()
     {
-        if (CurrentModelData.Root != null)
-            DestroyImmediate(CurrentModelData.Root);
+        if (CurrentModelData.PivotRoot != null)
+            DestroyImmediate(CurrentModelData.PivotRoot);
     }
 
     private void SetupNewModel()
     {
-        CurrentModelData.Root = new GameObject();
-        CurrentModelData.Root.transform.position = CurrentModelData.Bounds.center;
+        CurrentModelData.PivotRoot = new GameObject();
+        CurrentModelData.RecalculateBounds();
+        CurrentModelData.PivotRoot.transform.position = CurrentModelData.Bounds.center;
 
-        foreach (var mesh in CurrentModelData.MeshRenderers.Keys)
-            mesh.transform.SetParent(CurrentModelData.Root.transform);
+        CurrentModelData.GameObjectRoot.transform.SetParent(CurrentModelData.PivotRoot.transform);
 
-        CurrentModelData.Root.transform.position = Vector3.zero;
+        CurrentModelData.PivotRoot.transform.position = Vector3.zero;
     }
 
     private void UpdateParents()
     {
         PivotController.transform.position = Vector3.zero;
         PivotController.transform.rotation = Quaternion.identity;
-        CurrentModelData.Root.transform.SetParent(PivotController.transform);
-        CurrentModelData.Root.transform.Rotate(Vector3.up, 180);
+        CurrentModelData.PivotRoot.transform.SetParent(PivotController.transform);
+        CurrentModelData.PivotRoot.transform.Rotate(Vector3.up, 180);
+        CurrentModelData.PivotRoot.transform.Rotate(Vector3.right, 90);
+
     }
 
     public void UpdateModelViewer(Vector3 aspectRatioVector)
@@ -107,15 +108,16 @@ public class ModelViewer : MonoBehaviour
 
     public void UpdateCameraPosition()
     {
-        if (CurrentModelData.Root == null)
+        if (CurrentModelData.GameObjectRoot == null)
             return;
 
-        CurrentModelData.Root.transform.localScale = CurrentModelData.Root.transform.localScale * _projectionPlane.BottomLeft.x / CurrentModelData.Bounds.min.x;
+        CurrentModelData.RecalculateBounds();
+        CurrentModelData.PivotRoot.transform.localScale = CurrentModelData.PivotRoot.transform.localScale * _projectionPlane.BottomLeft.x / CurrentModelData.Bounds.min.x;
         CurrentModelData.RecalculateBounds();
 
         if (CurrentModelData.Bounds.max.y > _projectionPlane.TopLeft.y)
         {
-            CurrentModelData.Root.transform.localScale = CurrentModelData.Root.transform.localScale * _projectionPlane.TopLeft.y / CurrentModelData.Bounds.max.y;
+            CurrentModelData.PivotRoot.transform.localScale = CurrentModelData.PivotRoot.transform.localScale * _projectionPlane.TopLeft.y / CurrentModelData.Bounds.max.y;
             CurrentModelData.RecalculateBounds();
         }
 
@@ -126,10 +128,27 @@ public class ModelViewer : MonoBehaviour
     {
         var currMat = _renderMaterials.RendererMaterials.First(x => x.Index == index).Material;
 
-        foreach (var s in CurrentModelData.MeshRenderers)
+        if (index == MaterialTypeId.Color)
         {
-            s.Key.material = currMat;
-            s.Key.material.SetTexture("_MainTex", s.Value);
+            foreach (var s in CurrentModelData.DiffuseMaterials)
+            {
+                s.Key.material = s.Value;
+            }
+        }
+        else if (index == MaterialTypeId.Unlit)
+        {
+            foreach (var s in CurrentModelData.DiffuseMaterials)
+            {
+                s.Key.material = currMat;
+                s.Key.material.SetTexture("_MainTex", s.Value.GetTexture("_MainTex"));
+            }
+        }
+        else
+        {
+            foreach (var s in CurrentModelData.DiffuseMaterials)
+            {
+                s.Key.material = currMat;
+            }
         }
     }
 
@@ -147,70 +166,41 @@ public class RenderMaterials
 
 public class CurrentModelData
 {
-    public Dictionary<MeshRenderer,Texture> MeshRenderers;
-    public GameObject Root;
+    public Dictionary<MeshRenderer, Material> DiffuseMaterials;
+    public GameObject PivotRoot;
+    public GameObject GameObjectRoot;
+
     public Bounds Bounds;
     public int VerticesCount;
     public int TrianglesCount;
 
     public void RecalculateBounds()
     {
-        Bounds = new Bounds();
-
-        foreach (MeshRenderer child in MeshRenderers.Keys)
-        {
-            Bounds.Encapsulate(child.bounds);
-        }
+        Renderer[] rr = GameObjectRoot.transform.GetComponentsInChildren<Renderer>();
+        Bounds b = rr[0].bounds;
+        foreach (Renderer r in rr) { b.Encapsulate(r.bounds); }
+        Bounds = b;
     }
 
-    //public static List<MeshRenderer> GetMeshRenderers(this Dictionary<MeshRenderer, Texture> gameObjects)
-    //{
-    //    List<MeshRenderer> meshRenderers = new List<MeshRenderer>();
-
-    //    foreach (MeshRenderer child in gameObjects.Keys)
-    //    {
-    //        meshRenderers.Add(child);
-    //    }
-
-    //    return meshRenderers;
-    //}
-
-    //public static void GetMeshData(this List<MeshRenderer> meshes, out MeshData meshData)
-    //{
-
-
-    //    meshData = new ();
-    //    meshData.MeshRendererData = new();
-
-    //    foreach (MeshRenderer mesh in meshes)
-    //    {
-    //        var texture = mesh.material.GetTexture("_MainTex");
-
-    //        if (texture != null)
-    //            meshData.MeshRendererData.Add(mesh, texture);
-
-    //        var meshFilter = mesh.gameObject.GetComponent<MeshFilter>();
-    //        meshData.VerticesCount += meshFilter.sharedMesh.vertexCount;
-    //        meshData.TrianglesCount += meshFilter.sharedMesh.triangles.Length/3;
-    //    }
-    //}
     public void SetMeshData(GameObject gameObject)
     {
-        Dictionary<MeshRenderer, Texture> meshRenderers = new Dictionary<MeshRenderer, Texture>();
+        DiffuseMaterials = new Dictionary<MeshRenderer, Material>();
+        GameObjectRoot = gameObject;
 
-        foreach (MeshRenderer child in gameObject.transform.GetComponentsInChildren<MeshRenderer>())
+        foreach (Transform child in gameObject.transform.GetComponentsInChildren<Transform>())
         {
             var meshFilter = child.GetComponent<MeshFilter>();
 
             if (meshFilter == null)
                 continue;
-
-            var texture = child.material.GetTexture("_MainTex");
+            meshFilter.mesh.RecalculateBounds();
             VerticesCount += meshFilter.sharedMesh.vertexCount;
             TrianglesCount += meshFilter.sharedMesh.triangles.Length / 3;
-            meshRenderers.Add(child, texture);
+
+            var meshRenderer = child.GetComponent<MeshRenderer>();
+            DiffuseMaterials.Add(meshRenderer, meshRenderer.material);
         }
 
-        MeshRenderers = meshRenderers;
+        Debug.Log(DiffuseMaterials.Count());
     }
 }
