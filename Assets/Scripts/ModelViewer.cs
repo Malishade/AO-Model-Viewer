@@ -86,7 +86,7 @@ public class ModelViewer : MonoBehaviour
         {
             case GameObjectType.Model:
                 CurrentModelData.PivotRoot.transform.Rotate(Vector3.up, 180);
-                CurrentModelData.PivotRoot.transform.Rotate(Vector3.right, 90); break;
+                break;
             case GameObjectType.Texture:
                 CurrentModelData.PivotRoot.transform.Rotate(Vector3.up, 180);
                 break;

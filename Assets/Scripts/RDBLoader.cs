@@ -169,7 +169,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
                 AMaterial material = scene.Materials[scene.Meshes[meshIdx].MaterialIndex];
 
                 submeshObj.AddComponent<MeshRenderer>().material = LoadMaterial(material);
-                submeshObj.transform.parent = nodeObj.transform;
+                submeshObj.transform.SetParent(nodeObj.transform, false);
 
                 if (uvAnims.TryGetValue(meshIdx, out UVKey[] uvAnim))
                 {
@@ -181,7 +181,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         foreach (Node child in node.Children)
         {
             GameObject childObj = CreateNode(scene, child, uvAnims);
-            childObj.transform.parent = nodeObj.transform;
+            childObj.transform.SetParent(nodeObj.transform, false);
         }
 
         return nodeObj;
