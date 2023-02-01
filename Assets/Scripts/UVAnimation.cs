@@ -38,7 +38,12 @@ public class UVAnimation : MonoBehaviour
         float xOffset = Mathf.Lerp(_keys[_currentKey].Offset.X, _keys[_currentKey + 1].Offset.X, _time / currentFrameDuration);
         float yOffset = Mathf.Lerp(_keys[_currentKey].Offset.Y, _keys[_currentKey + 1].Offset.Y, _time / currentFrameDuration);
 
+
+        float xScale = Mathf.Lerp(_keys[_currentKey].Tiling.X, _keys[_currentKey + 1].Tiling.X, _time / currentFrameDuration);
+        float yScale = Mathf.Lerp(_keys[_currentKey].Tiling.Y, _keys[_currentKey + 1].Tiling.Y, _time / currentFrameDuration);
+
         _meshRenderer.material.mainTextureOffset = new Vector2(xOffset, yOffset);
+        _meshRenderer.material.mainTextureScale = new Vector2(xScale, yScale);
 
         _time += Time.deltaTime;
     }
