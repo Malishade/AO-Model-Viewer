@@ -16,6 +16,7 @@ using AMaterial = Assimp.Material;
 using AMaterialProperty = Assimp.MaterialProperty;
 using AQuaternion = Assimp.Quaternion;
 using Assimp.Unmanaged;
+using static AODB.Common.DbClasses.RDBMesh_t.FAFAnim_t;
 
 [CreateAssetMenu]
 public class RDBLoader : ScriptableSingleton<RDBLoader>
@@ -61,7 +62,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
     public void ExportMesh(int meshId, string path)
     {
         RDBMesh mesh = _rdbController.Get<RDBMesh>(meshId);
-        Scene scene = AbiffConverter.ToAssimpScene(mesh.RDBMesh_t);
+        Scene scene = AbiffConverter.ToAssimpScene(mesh.RDBMesh_t, out _);
 
         foreach (AMaterial mat in scene.Materials)
         {
@@ -143,12 +144,12 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         Debug.Log($"Loading mesh {meshId}");
 
         RDBMesh rdbMesh = _rdbController.Get<RDBMesh>(meshId);
-        Scene scene = AbiffConverter.ToAssimpScene(rdbMesh.RDBMesh_t);
+        Scene scene = AbiffConverter.ToAssimpScene(rdbMesh.RDBMesh_t, out var uvAnims);
 
-        return CreateNode(scene, scene.RootNode);
+        return CreateNode(scene, scene.RootNode, uvAnims);
     }
 
-    private GameObject CreateNode(Scene scene, Node node)
+    private GameObject CreateNode(Scene scene, Node node, Dictionary<int, UVKey[]> uvAnims)
     {
         GameObject nodeObj = new GameObject(node.Name);
 
@@ -169,12 +170,17 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
                 submeshObj.AddComponent<MeshRenderer>().material = LoadMaterial(material);
                 submeshObj.transform.parent = nodeObj.transform;
+
+                if (uvAnims.TryGetValue(meshIdx, out UVKey[] uvAnim))
+                {
+                    submeshObj.AddComponent<UVAnimation>().Init(uvAnim);
+                }
             }
         }
 
         foreach (Node child in node.Children)
         {
-            GameObject childObj = CreateNode(scene, child);
+            GameObject childObj = CreateNode(scene, child, uvAnims);
             childObj.transform.parent = nodeObj.transform;
         }
 
