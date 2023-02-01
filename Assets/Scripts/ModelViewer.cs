@@ -9,19 +9,12 @@ using Material = UnityEngine.Material;
 public class ModelViewer : MonoBehaviour
 {
     public Camera MainCamera;
+    public PivotController PivotController;
+    public CurrentModelData CurrentModelData;
     [SerializeField] private ScriptableRendererMaterial _renderMaterials;
     [SerializeField] private GameObject _texturePlanePreset;
-    public PivotController PivotController;
-
-    //[HideInInspector] public GameObject CurrentModelRoot;
-    //[HideInInspector] public List<MeshRenderer> CurrentModelMeshes;
-
     [SerializeField] private ProjectionPlane _projectionPlane;
     [SerializeField] private int _targetFrameRate = 200;
-
-   // private Bounds _currentModelBounds;
-
-    public CurrentModelData CurrentModelData;
 
     void Start()
     {
@@ -46,27 +39,30 @@ public class ModelViewer : MonoBehaviour
 
         CurrentModelData.DiffuseMaterials = new Dictionary<MeshRenderer, Material> { { meshRenderer, meshRenderer.material } };
 
-        UpdateModelViewer();
+        InitUpdateRdbMesh(mesh, GameObjectType.Texture);
+
     }
 
-    public void InitUpdateRdbMesh(GameObject meshes)
+    public void InitUpdateRdbMesh(GameObject meshes, GameObjectType type)
     {
         CurrentModelData.SetMeshData(meshes);
-        UpdateModelViewer();
+        UpdateModelViewer(type);
     }
 
-    private void UpdateModelViewer()
+    private void UpdateModelViewer(GameObjectType type)
     {
         DestroyCurrentModel();
         SetupNewModel();
-        UpdateParents();
+        UpdateParents(type);
         UpdateCameraPosition();
     }
 
     public void DestroyCurrentModel()
     {
-        if (CurrentModelData.PivotRoot != null)
-            DestroyImmediate(CurrentModelData.PivotRoot);
+        if (CurrentModelData == null || CurrentModelData.PivotRoot == null)
+            return;
+
+        DestroyImmediate(CurrentModelData.PivotRoot);
     }
 
     private void SetupNewModel()
@@ -80,14 +76,21 @@ public class ModelViewer : MonoBehaviour
         CurrentModelData.PivotRoot.transform.position = Vector3.zero;
     }
 
-    private void UpdateParents()
+    private void UpdateParents(GameObjectType type)
     {
         PivotController.transform.position = Vector3.zero;
         PivotController.transform.rotation = Quaternion.identity;
         CurrentModelData.PivotRoot.transform.SetParent(PivotController.transform);
-        CurrentModelData.PivotRoot.transform.Rotate(Vector3.up, 180);
-        CurrentModelData.PivotRoot.transform.Rotate(Vector3.right, 90);
 
+        switch (type)
+        {
+            case GameObjectType.Model:
+                CurrentModelData.PivotRoot.transform.Rotate(Vector3.up, 180);
+                CurrentModelData.PivotRoot.transform.Rotate(Vector3.right, 90); break;
+            case GameObjectType.Texture:
+                CurrentModelData.PivotRoot.transform.Rotate(Vector3.up, 180);
+                break;
+        }
     }
 
     public void UpdateModelViewer(Vector3 aspectRatioVector)
@@ -176,6 +179,14 @@ public class CurrentModelData
 
     public void RecalculateBounds()
     {
+        var root = GameObjectRoot.transform.GetComponent<Renderer>();
+
+        if (root != null)
+        {
+            Bounds = root.bounds;
+            return;
+        }
+
         Renderer[] rr = GameObjectRoot.transform.GetComponentsInChildren<Renderer>();
         Bounds b = rr[0].bounds;
         foreach (Renderer r in rr) { b.Encapsulate(r.bounds); }
@@ -186,6 +197,8 @@ public class CurrentModelData
     {
         DiffuseMaterials = new Dictionary<MeshRenderer, Material>();
         GameObjectRoot = gameObject;
+        VerticesCount = 0;
+        TrianglesCount = 0; 
 
         foreach (Transform child in gameObject.transform.GetComponentsInChildren<Transform>())
         {
@@ -200,7 +213,10 @@ public class CurrentModelData
             var meshRenderer = child.GetComponent<MeshRenderer>();
             DiffuseMaterials.Add(meshRenderer, meshRenderer.material);
         }
-
-        Debug.Log(DiffuseMaterials.Count());
     }
+}
+public enum GameObjectType
+{
+    Model,
+    Texture
 }

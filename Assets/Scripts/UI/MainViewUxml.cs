@@ -45,12 +45,12 @@ public class MainViewUxml
 
         root.AddManipulator(new ContextualMenuManipulator());
 
+        InitRightContainer(root);
         InitListView(root);
         InitTypeDropdown(root);
         InitFileMenu(root);
         InitSearchBar(root);
         InitModelInspector(root);
-        InitRightContainer(root);
         FixScrollSpeed();
     }
 
@@ -91,14 +91,13 @@ public class MainViewUxml
         if (selectedEntry == null)
             return;
 
-
         switch (selectedEntry.ResourceType)
         {
             case ResourceTypeId.RdbMesh:
                 var rdbMesh = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
-                _modelViewer.InitUpdateRdbMesh(rdbMesh);
-                 _statisticsDataModel.Vertices.text = _modelViewer.CurrentModelData.VerticesCount.ToString();
-                 _statisticsDataModel.Tris.text = _modelViewer.CurrentModelData.TrianglesCount.ToString();
+                _modelViewer.InitUpdateRdbMesh(rdbMesh, GameObjectType.Model);
+                _statisticsDataModel.Vertices.text = _modelViewer.CurrentModelData.VerticesCount.ToString();
+                _statisticsDataModel.Tris.text = _modelViewer.CurrentModelData.TrianglesCount.ToString();
                 MaterialChangeAction(_activeMatTypeId);
                 break;
             case ResourceTypeId.Texture:
@@ -106,7 +105,6 @@ public class MainViewUxml
                 _modelViewer.InitUpdateRdbTexture(rdbMat);
                 break;
         }
-
     }
 
     private void InitModelInspector(VisualElement root)
@@ -171,19 +169,13 @@ public class MainViewUxml
 
             return newListEntry;
         };
-
+        RegisterListViewPointerEvents();
         _resultsLabel = root.Q<Label>("ResultsLabel");
     }
 
-    private void OnMouseLeave(PointerLeaveEvent evt)
-    {
-        _modelViewer.PivotController.DisableMouseInput = false;
-    }
+    private void RightContainerMouseClick(MouseDownEvent evt) => _modelViewer.PivotController.DisableMouseInput = false;
 
-    private void OnMouseEnter(PointerEnterEvent evt)
-    {
-        _modelViewer.PivotController.DisableMouseInput = true;
-    }
+    private void ListViewMouseClick(MouseDownEvent evt) => _modelViewer.PivotController.DisableMouseInput = true;
 
     private void InitTypeDropdown(VisualElement root)
     {
@@ -205,16 +197,12 @@ public class MainViewUxml
         switch (_activeResourceTypeId)
         {
             case ResourceTypeId.RdbMesh:
-                _listView.RegisterCallback<PointerEnterEvent>(OnMouseEnter);
-                _listView.RegisterCallback<PointerLeaveEvent>(OnMouseLeave);
-                _modelViewer.PivotController.RenderCamera.orthographic = false;
+                RegisterListViewPointerEvents();
                 _modelInspectorFoldout.style.display = DisplayStyle.Flex;
                 break;
             case ResourceTypeId.Texture:
-                _listView.UnregisterCallback<PointerEnterEvent>(OnMouseEnter);
-                _listView.UnregisterCallback<PointerLeaveEvent>(OnMouseLeave);
+                UnRegisterListViewPointerEvents();
                 _modelViewer.PivotController.DisableMouseInput = true;
-               // _modelViewer.PivotController.RenderCamera.orthographic = true;
                 _modelInspectorFoldout.style.display = DisplayStyle.None;
                 break;
         }
@@ -271,6 +259,9 @@ public class MainViewUxml
     {
         var container = (VisualElement)evt.target;
         Vector2 visibleArea = new Vector2(container.contentRect.width, container.contentRect.height);
+
+        if (visibleArea.x == 0 || visibleArea.y == 0)
+            return;
 
         Vector2 aspectRatioArea = visibleArea.x / visibleArea.y < 16f / 9f ?
             new Vector2(Mathf.FloorToInt(visibleArea.y * 16f / 9f), Mathf.FloorToInt(visibleArea.y)) :
@@ -372,6 +363,20 @@ public class MainViewUxml
 
         return listViewData;
     }
+
+
+    private void RegisterListViewPointerEvents()
+    {
+        _listView.RegisterCallback<MouseDownEvent>(ListViewMouseClick);
+       _modelViewerContainer.RegisterCallback<MouseDownEvent>(RightContainerMouseClick);    
+    }
+
+    private void UnRegisterListViewPointerEvents()
+    {
+        _listView.UnregisterCallback<MouseDownEvent>(ListViewMouseClick);
+        _modelViewerContainer.UnregisterCallback<MouseDownEvent>(RightContainerMouseClick);
+    }
+
 
     public class ListViewDataModel
     {
