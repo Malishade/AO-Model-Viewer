@@ -369,7 +369,6 @@ public class MainViewUxml
 
     private void RegisterListViewPointerEvents()
     {
-        Debug.Log("Lolis");
         _listView.RegisterCallback<MouseEnterEvent>(ListViewMouseEnter);
         _listView.RegisterCallback<MouseLeaveEvent>(ListViewMouseLeave);
     }
