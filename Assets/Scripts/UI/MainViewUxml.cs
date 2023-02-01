@@ -5,6 +5,7 @@ using ContextualMenuPlayer;
 using SFB;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -61,15 +62,21 @@ public class MainViewUxml
 
         ListViewDataModel selectedEntry = _listView.selectedItem as ListViewDataModel;
 
-        string defaultName = selectedEntry.Name.Replace(".abiff", ".fbx");
+        string defaultName = selectedEntry.Name.Trim('\0');
+        
+        if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
+            defaultName = defaultName.Replace(".abiff", ".fbx");
 
-        StandaloneFileBrowser.SaveFilePanelAsync("Export Resource", null, defaultName, "fbx", (path) =>
+
+        StandaloneFileBrowser.SaveFilePanelAsync("Export Resource", null, defaultName, Path.GetExtension(defaultName), (path) =>
         {
             if (string.IsNullOrEmpty(path))
                 return;
 
             if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
                 RDBLoader.Instance.ExportMesh(((ListViewDataModel)_listView.selectedItem).Id, path);
+            else if (selectedEntry.ResourceType == ResourceTypeId.Texture)
+                RDBLoader.Instance.ExportTexture(path ,((ListViewDataModel)_listView.selectedItem).Id, out _);
         });
     }
 
@@ -284,13 +291,11 @@ public class MainViewUxml
 
             _settings.AODirectory = paths.First();
             SettingsManager.Instance.Save();
-            Debug.Log($"Set AO Directory to {paths.First()}");
         });
     }
 
     private void LoadClicked(DropdownMenuAction action)
     {
-        Debug.Log("Load!");
         RDBLoader.Instance.OpenDatabase();
         PopulateListView();
         _searchBarTextField.SetEnabled(true);
@@ -300,13 +305,11 @@ public class MainViewUxml
     private void CloseClicked(DropdownMenuAction action)
     {
         RDBLoader.Instance.CloseDatabase();
-        Debug.Log("Close!");
     }
 
     private void ExitClicked(DropdownMenuAction action)
     {
         Application.Quit();
-        Debug.Log("Exit!");
     }
 
     private void FixScrollSpeed()
