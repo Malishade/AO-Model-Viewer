@@ -200,11 +200,16 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
     public Material LoadMaterial(AMaterial material)
     {
-        Material unityMat = new Material(Shader.Find("Standard"));
+        Material aoMat = new Material(Shader.Find("Custom/AOShader"));
 
         if (material.HasNonTextureProperty("ApplyAlpha"))
         {
-            unityMat.SetFloat("_mode", material.GetNonTextureProperty("ApplyAlpha").GetBooleanValue() ? 1 : 0);
+            aoMat.SetFloat("_Cutoff", material.GetNonTextureProperty("ApplyAlpha").GetBooleanValue() ? 0.5f : 0);
+        }
+
+        if (material.IsTwoSided)
+        {
+            aoMat.SetFloat("_DoubleSided", 0.5f);
         }
 
         if (material.HasNonTextureProperty("DiffuseId"))
@@ -214,23 +219,20 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
             Texture2D diffuseTex = new Texture2D(1, 1);
             diffuseTex.LoadImage(_rdbController.Get<AOTexture>(diffuseId).JpgData);
 
-            unityMat.SetFloat("_Glossiness", 0.35f);
-            unityMat.mainTexture = diffuseTex;
+            aoMat.mainTexture = diffuseTex;
         }
 
         if (material.HasNonTextureProperty("EmissionId"))
         {
             int emissionId = material.GetNonTextureProperty("EmissionId").GetIntegerValue();
             Debug.Log($"Loading emission texture {emissionId}");
-            Texture2D emissionTex = new Texture2D(1, 1);
-            emissionTex.LoadImage(_rdbController.Get<AOTexture>(emissionId).JpgData);
+            //Texture2D emissionTex = new Texture2D(1, 1);
+            //emissionTex.LoadImage(_rdbController.Get<AOTexture>(emissionId).JpgData);
 
-            unityMat.EnableKeyword("_Emission");
-            unityMat.SetTexture("_EmissionMap", emissionTex);
-            unityMat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            aoMat.SetFloat("_Emission", 1);
         }
 
-        return unityMat;
+        return aoMat;
     }
 
     public Material LoadMaterialOld(int texId)
@@ -239,7 +241,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         Texture2D tex = new Texture2D(1, 1);
         tex.LoadImage(_rdbController.Get<AOTexture>(texId).JpgData);
 
-        Material mat = new Material(Shader.Find("Standard"));
+        Material mat = new Material(Shader.Find("Custom/AOShader"));
         mat.mainTexture = tex;
 
         return mat;

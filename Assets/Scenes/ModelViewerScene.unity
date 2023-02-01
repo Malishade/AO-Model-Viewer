@@ -603,9 +603,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MainCamera: {fileID: 2035119611635552104}
+  PivotController: {fileID: 790758991}
   _renderMaterials: {fileID: 11400000, guid: c4357ec6dadbc48479c09ac12cd18a3f, type: 2}
   _texturePlanePreset: {fileID: 1373176966516033808, guid: 88c00b5d0f58bca468c786d264a59bc3, type: 3}
-  PivotController: {fileID: 790758991}
   _projectionPlane: {fileID: 2035119612226713827}
   _targetFrameRate: 200
 --- !u!20 &2035119611635552104

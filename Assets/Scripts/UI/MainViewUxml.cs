@@ -63,7 +63,7 @@ public class MainViewUxml
         ListViewDataModel selectedEntry = _listView.selectedItem as ListViewDataModel;
 
         string defaultName = selectedEntry.Name.Trim('\0');
-        
+
         if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
             defaultName = defaultName.Replace(".abiff", ".fbx");
 
@@ -76,7 +76,7 @@ public class MainViewUxml
             if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
                 RDBLoader.Instance.ExportMesh(((ListViewDataModel)_listView.selectedItem).Id, path);
             else if (selectedEntry.ResourceType == ResourceTypeId.Texture)
-                RDBLoader.Instance.ExportTexture(path ,((ListViewDataModel)_listView.selectedItem).Id, out _);
+                RDBLoader.Instance.ExportTexture(path, ((ListViewDataModel)_listView.selectedItem).Id, out _);
         });
     }
 
@@ -180,9 +180,9 @@ public class MainViewUxml
         _resultsLabel = root.Q<Label>("ResultsLabel");
     }
 
-    private void RightContainerMouseClick(MouseDownEvent evt) => _modelViewer.PivotController.DisableMouseInput = false;
+    private void ListViewMouseEnter(MouseEnterEvent evt) => _modelViewer.PivotController.DisableMouseInput = true;
 
-    private void ListViewMouseClick(MouseDownEvent evt) => _modelViewer.PivotController.DisableMouseInput = true;
+    private void ListViewMouseLeave(MouseLeaveEvent evt) => _modelViewer.PivotController.DisableMouseInput = false;
 
     private void InitTypeDropdown(VisualElement root)
     {
@@ -370,14 +370,14 @@ public class MainViewUxml
 
     private void RegisterListViewPointerEvents()
     {
-        _listView.RegisterCallback<MouseDownEvent>(ListViewMouseClick);
-       _modelViewerContainer.RegisterCallback<MouseDownEvent>(RightContainerMouseClick);    
+        _listView.RegisterCallback<MouseEnterEvent>(ListViewMouseEnter);
+        _listView.RegisterCallback<MouseLeaveEvent>(ListViewMouseLeave);
     }
 
     private void UnRegisterListViewPointerEvents()
     {
-        _listView.UnregisterCallback<MouseDownEvent>(ListViewMouseClick);
-        _modelViewerContainer.UnregisterCallback<MouseDownEvent>(RightContainerMouseClick);
+        _listView.UnregisterCallback<MouseEnterEvent>(ListViewMouseEnter);
+        _listView.UnregisterCallback<MouseLeaveEvent>(ListViewMouseLeave);
     }
 
 
