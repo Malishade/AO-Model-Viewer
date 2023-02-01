@@ -67,8 +67,7 @@ public class MainViewUxml
         if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
             defaultName = defaultName.Replace(".abiff", ".fbx");
 
-
-        StandaloneFileBrowser.SaveFilePanelAsync("Export Resource", null, defaultName, Path.GetExtension(defaultName), (path) =>
+        StandaloneFileBrowser.SaveFilePanelAsync("Export Resource", null, Path.GetFileNameWithoutExtension(defaultName), Path.GetExtension(defaultName).Substring(1), (path) =>
         {
             if (string.IsNullOrEmpty(path))
                 return;
