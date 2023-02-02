@@ -205,12 +205,13 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         if (material.HasNonTextureProperty("ApplyAlpha"))
         {
             //Meow
-            aoMat.SetFloat("_Cutoff", material.GetNonTextureProperty("ApplyAlpha").GetBooleanValue() ? 0.05f : 0);
-            aoMat.SetFloat("_Cutoff", 0.05f);
-            aoMat.SetFloat("_Transparency", 1f);
-            aoMat.SetFloat("_Src", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            aoMat.SetFloat("_Dst", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-
+            if (material.GetNonTextureProperty("ApplyAlpha").GetBooleanValue())
+            {
+                aoMat.SetFloat("_Cutoff", 0.05f);
+                aoMat.SetFloat("_Transparency", 1f);
+                aoMat.SetFloat("_Src", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                aoMat.SetFloat("_Dst", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            }
             //Cutoff
             //aoMat.SetFloat("_Cutoff", material.GetNonTextureProperty("ApplyAlpha").GetBooleanValue() ? 0.5f : 0);
             //aoMat.SetFloat("_Transparency", 1f);
