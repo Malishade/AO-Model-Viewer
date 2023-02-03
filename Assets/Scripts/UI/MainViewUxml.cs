@@ -23,7 +23,6 @@ public class MainViewUxml
     private ListView _listView;
     private ModelViewer _modelViewer;
     private StatisticsDataModel _statisticsDataModel;
-    private MeshData _meshData;
     private Label _resultsLabel;
     private TextField _searchBarTextField;
     private Button _searchBarClearButton;
@@ -79,16 +78,16 @@ public class MainViewUxml
         });
     }
 
-    private void ImportClicked(DropdownMenuAction obj)
-    {
-        StandaloneFileBrowser.OpenFilePanelAsync("Locate the FBX file.", null, "fbx", false, (paths) =>
-        {
-            if (paths.Length == 0)
-                return;
+    //private void ImportClicked(DropdownMenuAction obj)
+    //{
+    //    StandaloneFileBrowser.OpenFilePanelAsync("Locate the FBX file.", null, "fbx", false, (paths) =>
+    //    {
+    //        if (paths.Length == 0)
+    //            return;
 
-            //paths.First();
-        });
-    }
+    //        //paths.First();
+    //    });
+    //}
 
     private void OnEntryClicked(IEnumerable<object> obj)
     {
@@ -101,7 +100,7 @@ public class MainViewUxml
         {
             case ResourceTypeId.RdbMesh:
                 var rdbMesh = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
-                _modelViewer.InitUpdateRdbMesh(rdbMesh, GameObjectType.Model);
+                _modelViewer.InitUpdateRdbMesh(rdbMesh);
                 _statisticsDataModel.Vertices.text = _modelViewer.CurrentModelData.VerticesCount.ToString();
                 _statisticsDataModel.Tris.text = _modelViewer.CurrentModelData.TrianglesCount.ToString();
                 MaterialChangeAction(_activeMatTypeId);
@@ -366,7 +365,6 @@ public class MainViewUxml
         return listViewData;
     }
 
-
     private void RegisterListViewPointerEvents()
     {
         _listView.RegisterCallback<MouseEnterEvent>(ListViewMouseEnter);
@@ -378,7 +376,6 @@ public class MainViewUxml
         _listView.UnregisterCallback<MouseEnterEvent>(ListViewMouseEnter);
         _listView.UnregisterCallback<MouseLeaveEvent>(ListViewMouseLeave);
     }
-
 
     public class ListViewDataModel
     {

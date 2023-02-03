@@ -39,21 +39,21 @@ public class ModelViewer : MonoBehaviour
 
         CurrentModelData.DiffuseMaterials = new Dictionary<MeshRenderer, Material> { { meshRenderer, meshRenderer.material } };
 
-        InitUpdateRdbMesh(mesh, GameObjectType.Texture);
+        InitUpdateRdbMesh(mesh);
 
     }
 
-    public void InitUpdateRdbMesh(GameObject meshes, GameObjectType type)
+    public void InitUpdateRdbMesh(GameObject meshes)
     {
         CurrentModelData.SetMeshData(meshes);
-        UpdateModelViewer(type);
+        UpdateModelViewer();
     }
 
-    private void UpdateModelViewer(GameObjectType type)
+    private void UpdateModelViewer()
     {
         DestroyCurrentModel();
         SetupNewModel();
-        UpdateParents(type);
+        UpdateParents();
         UpdateCameraPosition();
     }
 
@@ -70,27 +70,17 @@ public class ModelViewer : MonoBehaviour
         CurrentModelData.PivotRoot = new GameObject();
         CurrentModelData.RecalculateBounds();
         CurrentModelData.PivotRoot.transform.position = CurrentModelData.Bounds.center;
-
         CurrentModelData.GameObjectRoot.transform.SetParent(CurrentModelData.PivotRoot.transform);
-
         CurrentModelData.PivotRoot.transform.position = Vector3.zero;
     }
 
-    private void UpdateParents(GameObjectType type)
+    private void UpdateParents()
     {
         PivotController.transform.position = Vector3.zero;
         PivotController.transform.rotation = Quaternion.identity;
         CurrentModelData.PivotRoot.transform.SetParent(PivotController.transform);
+        CurrentModelData.PivotRoot.transform.Rotate(Vector3.up, 180);
 
-        switch (type)
-        {
-            case GameObjectType.Model:
-                CurrentModelData.PivotRoot.transform.Rotate(Vector3.up, 180);
-                break;
-            case GameObjectType.Texture:
-                CurrentModelData.PivotRoot.transform.Rotate(Vector3.up, 180);
-                break;
-        }
     }
 
     public void UpdateModelViewer(Vector3 aspectRatioVector)
@@ -132,10 +122,10 @@ public class ModelViewer : MonoBehaviour
         var currMat = _renderMaterials.RendererMaterials.First(x => x.Index == index).Material;
 
         if (index == MaterialTypeId.Color)
-        {
-            foreach (var s in CurrentModelData.DiffuseMaterials)
+        {   
+            foreach (var mat in CurrentModelData.DiffuseMaterials)
             {
-                s.Key.material = s.Value;
+                mat.Key.material = mat.Value;
             }
         }
         else if (index == MaterialTypeId.Unlit)
@@ -148,9 +138,9 @@ public class ModelViewer : MonoBehaviour
         }
         else
         {
-            foreach (var s in CurrentModelData.DiffuseMaterials)
+            foreach (var mat in CurrentModelData.DiffuseMaterials)
             {
-                s.Key.material = currMat;
+                mat.Key.material = currMat;
             }
         }
     }
@@ -187,10 +177,15 @@ public class CurrentModelData
             return;
         }
 
-        Renderer[] rr = GameObjectRoot.transform.GetComponentsInChildren<Renderer>();
-        Bounds b = rr[0].bounds;
-        foreach (Renderer r in rr) { b.Encapsulate(r.bounds); }
-        Bounds = b;
+        Renderer[] renderers = GameObjectRoot.transform.GetComponentsInChildren<Renderer>();
+        Bounds bounds = renderers[0].bounds;
+
+        foreach (Renderer renderer in renderers)
+        {
+            bounds.Encapsulate(renderer.bounds);
+        }
+
+        Bounds = bounds;
     }
 
     public void SetMeshData(GameObject gameObject)
@@ -206,6 +201,7 @@ public class CurrentModelData
 
             if (meshFilter == null)
                 continue;
+
             meshFilter.mesh.RecalculateBounds();
             VerticesCount += meshFilter.sharedMesh.vertexCount;
             TrianglesCount += meshFilter.sharedMesh.triangles.Length / 3;
@@ -214,9 +210,4 @@ public class CurrentModelData
             DiffuseMaterials.Add(meshRenderer, meshRenderer.material);
         }
     }
-}
-public enum GameObjectType
-{
-    Model,
-    Texture
 }
