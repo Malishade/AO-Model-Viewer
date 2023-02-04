@@ -33,6 +33,10 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 #if UNITY_EDITOR
         AssimpLibrary.Instance.LoadLibrary($"{Application.dataPath}\\Plugins\\assimp");
 #endif
+#if UNITY_STANDALONE_WIN
+        AssimpLibrary.Instance.LoadLibrary($"{Application.dataPath}\\Plugins\\x86_64\\assimp");
+#endif
+
         _settings = SettingsManager.Instance.Settings;
     }
 
