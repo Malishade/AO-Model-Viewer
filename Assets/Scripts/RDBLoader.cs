@@ -34,6 +34,10 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 #if UNITY_EDITOR
         AssimpLibrary.Instance.LoadLibrary($"{Application.dataPath}\\Plugins\\assimp");
 #endif
+#if UNITY_STANDALONE_WIN
+        AssimpLibrary.Instance.LoadLibrary($"{Application.dataPath}\\Plugins\\x86_64\\assimp");
+#endif
+
         _settings = SettingsManager.Instance.Settings;
     }
 
@@ -210,12 +214,13 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         if (material.HasNonTextureProperty("ApplyAlpha"))
         {
             //Meow
-            aoMat.SetFloat("_Cutoff", material.GetNonTextureProperty("ApplyAlpha").GetBooleanValue() ? 0.25f : 0);
-            aoMat.SetFloat("_Cutoff", 0.25f);
-            aoMat.SetFloat("_Transparency", 1f);
-            aoMat.SetFloat("_Src", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            aoMat.SetFloat("_Dst", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-
+            if (material.GetNonTextureProperty("ApplyAlpha").GetBooleanValue())
+            {
+                aoMat.SetFloat("_Cutoff", 0.05f);
+                aoMat.SetFloat("_Transparency", 1f);
+                aoMat.SetFloat("_Src", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                aoMat.SetFloat("_Dst", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            }
             //Cutoff
             //aoMat.SetFloat("_Cutoff", material.GetNonTextureProperty("ApplyAlpha").GetBooleanValue() ? 0.5f : 0);
             //aoMat.SetFloat("_Transparency", 1f);

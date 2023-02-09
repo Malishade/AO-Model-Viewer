@@ -65,7 +65,7 @@ public class PivotController : MonoBehaviour
         if (!Input.GetMouseButton(1))
             return;
 
-        var mouseMoveAxis = new Vector3(_mouseInputX, _mouseInputY, 0) / 10;
+        var mouseMoveAxis = new Vector3(_mouseInputX, _mouseInputY, 0) / 20;
 
         _localPosition += mouseMoveAxis;
     }
@@ -83,7 +83,7 @@ public class PivotController : MonoBehaviour
         if (!(Input.GetAxis("Mouse ScrollWheel") != 0f))
             return;
 
-        var mouseScrollAxis = Vector3.forward * _mouseInputScroll * 2f;
+        var mouseScrollAxis = Vector3.forward * _mouseInputScroll * 1f;
 
         _localPosition -= mouseScrollAxis;
     }
