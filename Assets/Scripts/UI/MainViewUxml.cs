@@ -1,5 +1,5 @@
 using AODB;
-using AODB.RDBObjects;
+using AODB.Common.RDBObjects;
 using Assimp;
 using ContextualMenuPlayer;
 using SFB;
@@ -33,7 +33,12 @@ public class MainViewUxml
     private Dictionary<string, ResourceTypeId> _resourceTypeChoices = new()
     {
         { "Models (.abiff)", ResourceTypeId.RdbMesh },
+        { "Models2 (.abiff)", (ResourceTypeId)1010026 },
         { "Textures (.png)", ResourceTypeId.Texture },
+        { "Icons (.png)", (ResourceTypeId)1010008 },
+        { "Wall Textures (.png)", (ResourceTypeId)1010009 },
+        { "Skin Textures (.png)", (ResourceTypeId)1010011 }
+
         //{ "Characters (.cir)", ResourceTypeId.RdbMesh },
     };
     private VisualElement _modelViewerContainer;
@@ -100,14 +105,19 @@ public class MainViewUxml
         switch (selectedEntry.ResourceType)
         {
             case ResourceTypeId.RdbMesh:
-                var rdbMesh = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.Id);
+            case (ResourceTypeId)1010026:
+                var rdbMesh = RDBLoader.Instance.CreateAbiffMesh(selectedEntry.ResourceType, selectedEntry.Id);
                 _modelViewer.InitUpdateRdbMesh(rdbMesh, GameObjectType.Model);
                 _statisticsDataModel.Vertices.text = _modelViewer.CurrentModelData.VerticesCount.ToString();
                 _statisticsDataModel.Tris.text = _modelViewer.CurrentModelData.TrianglesCount.ToString();
                 MaterialChangeAction(_activeMatTypeId);
                 break;
             case ResourceTypeId.Texture:
-                var rdbMat = RDBLoader.Instance.LoadMaterialOld(selectedEntry.Id);
+            case (ResourceTypeId)1010008:
+            case (ResourceTypeId)1010009:
+            case (ResourceTypeId)1010011:
+
+                var rdbMat = RDBLoader.Instance.LoadMaterialOld(selectedEntry.ResourceType, selectedEntry.Id);
                 _modelViewer.InitUpdateRdbTexture(rdbMat);
                 break;
         }
@@ -346,15 +356,23 @@ public class MainViewUxml
     {
         List<ListViewDataModel> listViewData = new List<ListViewDataModel>();
 
+        Dictionary<int, string> names;
+
+        if(!RDBLoader.Instance.Names.TryGetValue(_activeResourceTypeId, out names))
+        {
+            names = RDBLoader.Instance.Records[_activeResourceTypeId].ToDictionary(x => x, x => $"UnnamedRecord_{x}");
+        }
+
+
         if (query == "")
         {
-            foreach (var rdbKeyValue in RDBLoader.Instance.Names[(int)_activeResourceTypeId])
+            foreach (var rdbKeyValue in names)
                 listViewData.Add(new ListViewDataModel { ResourceType=_activeResourceTypeId, Id = rdbKeyValue.Key, Name = rdbKeyValue.Value });
 
         }
         else
         {
-            foreach (var rdbKeyValue in RDBLoader.Instance.Names[(int)_activeResourceTypeId])
+            foreach (var rdbKeyValue in names)
             {
                 if (!rdbKeyValue.Value.Contains(query))
                     continue;

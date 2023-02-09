@@ -1,6 +1,5 @@
 using AODB;
 using AODB.Common;
-using AODB.RDBObjects;
 using Assimp;
 using System;
 using System.Collections.Generic;
@@ -17,11 +16,13 @@ using AMaterialProperty = Assimp.MaterialProperty;
 using AQuaternion = Assimp.Quaternion;
 using Assimp.Unmanaged;
 using static AODB.Common.DbClasses.RDBMesh_t.FAFAnim_t;
+using AODB.Common.RDBObjects;
 
 [CreateAssetMenu]
 public class RDBLoader : ScriptableSingleton<RDBLoader>
 {
-    public Dictionary<int, Dictionary<int, string>> Names = null;
+    public Dictionary<ResourceTypeId, Dictionary<int, string>> Names = null;
+    public Dictionary<ResourceTypeId, List<int>> Records; 
 
     public bool IsOpen => _rdbController != null;
 
@@ -46,9 +47,11 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         if (Names == null)
         {
             Names = _rdbController.Get<InfoObject>(1).Types;
-            Names[(int)ResourceTypeId.RdbMesh] = Names[(int)ResourceTypeId.RdbMesh].Where(x => _rdbController.RecordTypeToId[(int)ResourceTypeId.RdbMesh].ContainsKey(x.Key)).ToDictionary(x => x.Key, x => x.Value);
-            Names[(int)ResourceTypeId.Texture] = Names[(int)ResourceTypeId.Texture].Where(x => _rdbController.RecordTypeToId[(int)ResourceTypeId.Texture].ContainsKey(x.Key)).ToDictionary(x => x.Key, x => x.Value);
+            Names[ResourceTypeId.RdbMesh] = Names[ResourceTypeId.RdbMesh].Where(x => _rdbController.RecordTypeToId[(int)ResourceTypeId.RdbMesh].ContainsKey(x.Key)).ToDictionary(x => x.Key, x => x.Value);
+            Names[ResourceTypeId.Texture] = Names[ResourceTypeId.Texture].Where(x => _rdbController.RecordTypeToId[(int)ResourceTypeId.Texture].ContainsKey(x.Key)).ToDictionary(x => x.Key, x => x.Value);
         }
+
+        Records = _rdbController.RecordTypeToId.ToDictionary(x => (ResourceTypeId)x.Key, x => x.Value.Keys.ToList());
     }
 
     public void CloseDatabase()
@@ -100,7 +103,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
     public void ExportTexture(string exportPath, int texId, out string texName)
     {
-        texName = Names[(int)ResourceTypeId.Texture].TryGetValue(texId, out string rdbName) ? rdbName.Trim('\0') : $"UnnamedTex_{texId}";
+        texName = Names[ResourceTypeId.Texture].TryGetValue(texId, out string rdbName) ? rdbName.Trim('\0') : $"UnnamedTex_{texId}";
         File.WriteAllBytes($"{Path.GetDirectoryName(exportPath)}\\{texName}", _rdbController.Get<AOTexture>(texId).JpgData);
     }
 
@@ -127,7 +130,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
             };
 
             if (mesh.Material != null)
-                submeshObj.AddComponent<MeshRenderer>().material = LoadMaterialOld((int)mesh.Material.Texture);
+                submeshObj.AddComponent<MeshRenderer>().material = LoadMaterialOld(ResourceTypeId.Texture, (int)mesh.Material.Texture);
 
             submeshObj.transform.position = mesh.BasePos.ToUnity();
             submeshObj.transform.rotation = mesh.BaseRotation.ToUnity();
@@ -139,11 +142,13 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         return meshes;
     }
 
-    public GameObject CreateAbiffMesh(int meshId)
+    public GameObject CreateAbiffMesh(ResourceTypeId type, int meshId)
     {
         Debug.Log($"Loading mesh {meshId}");
 
-        RDBMesh rdbMesh = _rdbController.Get<RDBMesh>(meshId);
+        RDBMesh rdbMesh;
+
+        rdbMesh = type == ResourceTypeId.RdbMesh ? _rdbController.Get<RDBMesh>(meshId) : _rdbController.Get<RDBMesh2>(meshId);
         Scene scene = AbiffConverter.ToAssimpScene(rdbMesh.RDBMesh_t, out var uvAnims);
 
         return CreateNode(scene, scene.RootNode, uvAnims);
@@ -254,11 +259,11 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         return aoMat;
     }
 
-    public Material LoadMaterialOld(int texId)
+    public Material LoadMaterialOld(ResourceTypeId type, int texId)
     {
         Debug.Log($"Loading texture {texId}");
         Texture2D tex = new Texture2D(1, 1);
-        tex.LoadImage(_rdbController.Get<AOTexture>(texId).JpgData);
+        tex.LoadImage(_rdbController.Get<AOTexture>(type, texId).JpgData);
 
         Material mat = new Material(Shader.Find("Custom/AOShader"));
         mat.mainTexture = tex;
