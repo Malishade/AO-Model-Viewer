@@ -25,6 +25,9 @@ public class ModelViewer : MonoBehaviour
 
     public void InitUpdateRdbTexture(Material material)
     {
+        if (material == null)
+            return;
+
         var mesh = Instantiate(_texturePlanePreset);
         var meshRenderer = mesh.GetComponent<MeshRenderer>();
         var texture = material.GetTexture("_MainTex");
@@ -45,13 +48,12 @@ public class ModelViewer : MonoBehaviour
 
     public void InitUpdateRdbMesh(GameObject meshes)
     {
-        CurrentModelData.SetMeshData(meshes);
-        UpdateModelViewer();
-    }
-
-    private void UpdateModelViewer()
-    {
         DestroyCurrentModel();
+
+        if (meshes == null)
+            return;
+
+        CurrentModelData.SetMeshData(meshes);
         SetupNewModel();
         UpdateParents();
         UpdateCameraPosition();

@@ -32,12 +32,11 @@ public class MainViewUxml
     private Dictionary<string, ResourceTypeId> _resourceTypeChoices = new()
     {
         { "Models (.abiff)", ResourceTypeId.RdbMesh },
-        { "Models2 (.abiff)", (ResourceTypeId)1010026 },
+        //{ "Models2 (.abiff)", (ResourceTypeId)1010026 },
         { "Textures (.png)", ResourceTypeId.Texture },
-        { "Icons (.png)", (ResourceTypeId)1010008 },
-        { "Wall Textures (.png)", (ResourceTypeId)1010009 },
-        { "Skin Textures (.png)", (ResourceTypeId)1010011 }
-
+        //{ "Icons (.png)", (ResourceTypeId)1010008 },
+        //{ "Wall Textures (.png)", (ResourceTypeId)1010009 },
+        //{ "Skin Textures (.png)", (ResourceTypeId)1010011 }
         //{ "Characters (.cir)", ResourceTypeId.RdbMesh },
     };
     private VisualElement _modelViewerContainer;
@@ -80,6 +79,33 @@ public class MainViewUxml
                 RDBLoader.Instance.ExportMesh(((ListViewDataModel)_listView.selectedItem).Id, path);
             else if (selectedEntry.ResourceType == ResourceTypeId.Texture)
                 RDBLoader.Instance.ExportTexture(path, ((ListViewDataModel)_listView.selectedItem).Id, out _);
+        });
+    }
+
+    private void ExportAll(DropdownMenuAction obj)
+    {
+        StandaloneFileBrowser.OpenFolderPanelAsync("Export Resource", null, false, (pathArray) =>
+        {
+            string path = pathArray[0];
+
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            foreach (var entry in _listView.itemsSource)
+            {
+                var item = entry as ListViewDataModel;  
+                string defaultName = item.Name.Trim('\0');
+
+                if (item.ResourceType == ResourceTypeId.RdbMesh)
+                    defaultName = defaultName.Replace(".abiff", ".fbx");
+
+                string newPath = $"{path}\\{defaultName}";
+
+                if (item.ResourceType == ResourceTypeId.RdbMesh)
+                    RDBLoader.Instance.ExportMesh(item.Id, newPath);
+                else if (item.ResourceType == ResourceTypeId.Texture)
+                    RDBLoader.Instance.ExportTexture(newPath, item.Id, out _);
+            }
         });
     }
 
@@ -237,10 +263,16 @@ public class MainViewUxml
         _fileDropdownMenu.AppendAction($"Close Database", CloseClicked, CloseStatusCallback);
         _fileDropdownMenu.AppendSeparator();
         //_fileDropdownMenu.AppendAction("Import", ImportClicked, DropdownMenuAction.AlwaysEnabled);
-        _fileDropdownMenu.AppendAction("Export", ExportClicked, DropdownMenuAction.AlwaysEnabled);
+        _fileDropdownMenu.AppendAction("Export", ExportClicked, IsRdbOpen);
+        _fileDropdownMenu.AppendAction("Export All", ExportAll, IsTextureResourceTypeOpen);
+
         _fileDropdownMenu.AppendSeparator();
         _fileDropdownMenu.AppendAction($"Exit", ExitClicked, DropdownMenuAction.AlwaysEnabled);
     }
+
+    private DropdownMenuAction.Status IsTextureResourceTypeOpen(DropdownMenuAction arg) => RDBLoader.Instance.IsOpen && ((ListViewDataModel)_listView.itemsSource[0]).ResourceType == ResourceTypeId.Texture ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
+
+    private DropdownMenuAction.Status IsRdbOpen(DropdownMenuAction e) => RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
 
     private DropdownMenuAction.Status LoadStatusCallback(DropdownMenuAction e) => _settings.AODirectory == null || RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Disabled : DropdownMenuAction.Status.Normal;
 

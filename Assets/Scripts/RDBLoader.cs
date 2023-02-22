@@ -68,38 +68,47 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
     public void ExportMesh(int meshId, string path)
     {
-        RDBMesh mesh = _rdbController.Get<RDBMesh>(meshId);
-        Scene scene = AbiffConverter.ToAssimpScene(mesh.RDBMesh_t, out _);
+        Scene scene;
 
-        foreach (AMaterial mat in scene.Materials)
+        try
         {
-            if (mat.HasNonTextureProperty("DiffuseId"))
+            RDBMesh mesh = _rdbController.Get<RDBMesh>(meshId);
+            scene = AbiffConverter.ToAssimpScene(mesh.RDBMesh_t, out _);
+
+            foreach (AMaterial mat in scene.Materials)
             {
-                ExportTexture(path, mat.GetNonTextureProperty("DiffuseId").GetIntegerValue(), out string diffuseName);
-
-                TextureSlot diffuse = new TextureSlot
+                if (mat.HasNonTextureProperty("DiffuseId"))
                 {
-                    FilePath = diffuseName,
-                    TextureType = TextureType.Diffuse,
-                    TextureIndex = 0
-                };
+                    ExportTexture(path, mat.GetNonTextureProperty("DiffuseId").GetIntegerValue(), out string diffuseName);
 
-                AddMaterialTexture(mat, ref diffuse, false);
-            }
+                    TextureSlot diffuse = new TextureSlot
+                    {
+                        FilePath = diffuseName,
+                        TextureType = TextureType.Diffuse,
+                        TextureIndex = 0
+                    };
 
-            if (mat.HasNonTextureProperty("EmissionId"))
-            {
-                ExportTexture(path, mat.GetNonTextureProperty("EmissionId").GetIntegerValue(), out string emissionName);
+                    AddMaterialTexture(mat, ref diffuse, false);
+                }
 
-                TextureSlot emission = new TextureSlot
+                if (mat.HasNonTextureProperty("EmissionId"))
                 {
-                    FilePath = emissionName,
-                    TextureType = TextureType.Emissive,
-                    TextureIndex = 0,
-                };
+                    ExportTexture(path, mat.GetNonTextureProperty("EmissionId").GetIntegerValue(), out string emissionName);
 
-                AddMaterialTexture(mat, ref emission, false);
+                    TextureSlot emission = new TextureSlot
+                    {
+                        FilePath = emissionName,
+                        TextureType = TextureType.Emissive,
+                        TextureIndex = 0,
+                    };
+
+                    AddMaterialTexture(mat, ref emission, false);
+                }
             }
+        }
+        catch
+        {
+            return;
         }
 
         new AssimpContext().ExportFile(scene, path, "fbx");
@@ -148,12 +157,22 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
     public GameObject CreateAbiffMesh(ResourceTypeId type, int meshId)
     {
-        Debug.Log($"Loading mesh {meshId}");
+        Dictionary<int, UVKey[]> uvAnims;
+        Scene scene;
 
-        RDBMesh rdbMesh;
+        try
+        {
+            Debug.Log($"Loading mesh {meshId}");
 
-        rdbMesh = type == ResourceTypeId.RdbMesh ? _rdbController.Get<RDBMesh>(meshId) : _rdbController.Get<RDBMesh2>(meshId);
-        Scene scene = AbiffConverter.ToAssimpScene(rdbMesh.RDBMesh_t, out var uvAnims);
+            RDBMesh rdbMesh;
+
+            rdbMesh = type == ResourceTypeId.RdbMesh ? _rdbController.Get<RDBMesh>(meshId) : _rdbController.Get<RDBMesh2>(meshId);
+            scene = AbiffConverter.ToAssimpScene(rdbMesh.RDBMesh_t, out uvAnims);
+        }
+        catch
+        {
+            return null;
+        }
 
         return CreateNode(scene, scene.RootNode, uvAnims);
     }
@@ -266,12 +285,21 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
     public Material LoadMaterialOld(ResourceTypeId type, int texId)
     {
-        Debug.Log($"Loading texture {texId}");
-        Texture2D tex = new Texture2D(1, 1);
-        tex.LoadImage(_rdbController.Get<AOTexture>(type, texId).JpgData);
+        Material mat;
 
-        Material mat = new Material(Shader.Find("Custom/AOShader"));
-        mat.mainTexture = tex;
+        try
+        {
+            Debug.Log($"Loading texture {texId}");
+            Texture2D tex = new Texture2D(1, 1);
+            tex.LoadImage(_rdbController.Get<AOTexture>(type, texId).JpgData);
+
+            mat = new Material(Shader.Find("Custom/AOShader"));
+            mat.mainTexture = tex;
+        }
+        catch
+        {
+            return null;
+        }
 
         return mat;
     }
@@ -398,5 +426,4 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
         return true;
     }
-
 }
