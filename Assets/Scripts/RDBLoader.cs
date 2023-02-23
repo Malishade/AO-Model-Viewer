@@ -17,6 +17,7 @@ using AQuaternion = Assimp.Quaternion;
 using Assimp.Unmanaged;
 using static AODB.Common.DbClasses.RDBMesh_t.FAFAnim_t;
 using AODB.Common.RDBObjects;
+using static MainViewUxml;
 
 [CreateAssetMenu]
 public class RDBLoader : ScriptableSingleton<RDBLoader>
@@ -79,7 +80,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
             {
                 if (mat.HasNonTextureProperty("DiffuseId"))
                 {
-                    ExportTexture(path, mat.GetNonTextureProperty("DiffuseId").GetIntegerValue(), out string diffuseName);
+                    ExportMeshTexture(mat.GetNonTextureProperty("DiffuseId").GetIntegerValue(), path, out string diffuseName);
 
                     TextureSlot diffuse = new TextureSlot
                     {
@@ -93,7 +94,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
                 if (mat.HasNonTextureProperty("EmissionId"))
                 {
-                    ExportTexture(path, mat.GetNonTextureProperty("EmissionId").GetIntegerValue(), out string emissionName);
+                    ExportMeshTexture(mat.GetNonTextureProperty("EmissionId").GetIntegerValue(), path, out string emissionName);
 
                     TextureSlot emission = new TextureSlot
                     {
@@ -114,10 +115,29 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         new AssimpContext().ExportFile(scene, path, "fbx");
     }
 
-    public void ExportTexture(string exportPath, int texId, out string texName)
+    public void ExportMeshTexture(int texId, string path, out string texName)
     {
         texName = Names[ResourceTypeId.Texture].TryGetValue(texId, out string rdbName) ? rdbName.Trim('\0') : $"UnnamedTex_{texId}";
-        File.WriteAllBytes($"{Path.GetDirectoryName(exportPath)}\\{texName}", _rdbController.Get<AOTexture>(texId).JpgData);
+        File.WriteAllBytes($"{Path.GetDirectoryName(path)}\\{texName}", _rdbController.Get<AOTexture>(texId).JpgData);
+    }
+
+    public void ExportDataModel(ListViewDataModel dataModel, string path)
+    {
+        switch (dataModel.ResourceType)
+        {
+            case ResourceTypeId.Texture:
+                string texName = Names[ResourceTypeId.Texture].TryGetValue(dataModel.Id, out string rdbName) ? rdbName.Trim('\0') : $"UnnamedTex_{dataModel.Id}";
+                File.WriteAllBytes($"{Path.GetDirectoryName(path)}\\{texName}", _rdbController.Get<AOTexture>(dataModel.Id).JpgData);
+                break;
+            case (ResourceTypeId)1010008:
+                break;
+            case (ResourceTypeId)1010009:
+                break;
+            case (ResourceTypeId)1010011:
+                break;
+            default:
+                break;
+        }
     }
 
     public List<GameObject> CreateAbiffMeshOld(int meshId)

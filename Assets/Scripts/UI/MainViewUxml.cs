@@ -75,10 +75,7 @@ public class MainViewUxml
             if (string.IsNullOrEmpty(path))
                 return;
 
-            if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
-                RDBLoader.Instance.ExportMesh(((ListViewDataModel)_listView.selectedItem).Id, path);
-            else if (selectedEntry.ResourceType == ResourceTypeId.Texture)
-                RDBLoader.Instance.ExportTexture(path, ((ListViewDataModel)_listView.selectedItem).Id, out _);
+            ResourceExport(selectedEntry, path);
         });
     }
 
@@ -99,14 +96,24 @@ public class MainViewUxml
                 if (item.ResourceType == ResourceTypeId.RdbMesh)
                     defaultName = defaultName.Replace(".abiff", ".fbx");
 
-                string newPath = $"{path}\\{defaultName}";
-
-                if (item.ResourceType == ResourceTypeId.RdbMesh)
-                    RDBLoader.Instance.ExportMesh(item.Id, newPath);
-                else if (item.ResourceType == ResourceTypeId.Texture)
-                    RDBLoader.Instance.ExportTexture(newPath, item.Id, out _);
+                ResourceExport(item, $"{path}\\{defaultName}");
             }
         });
+    }
+
+    private void ResourceExport(ListViewDataModel dataModel, string path)
+    {
+        switch (dataModel.ResourceType)
+        {
+            case ResourceTypeId.RdbMesh:
+                RDBLoader.Instance.ExportMesh(dataModel.Id, path);
+                break;
+            case ResourceTypeId.Texture:
+                RDBLoader.Instance.ExportDataModel(dataModel, path);
+                break;
+            default:
+                break;
+        }
     }
 
     //private void ImportClicked(DropdownMenuAction obj)
@@ -141,7 +148,6 @@ public class MainViewUxml
             case (ResourceTypeId)1010008:
             case (ResourceTypeId)1010009:
             case (ResourceTypeId)1010011:
-
                 var rdbMat = RDBLoader.Instance.LoadMaterialOld(selectedEntry.ResourceType, selectedEntry.Id);
                 _modelViewer.InitUpdateRdbTexture(rdbMat);
                 break;
