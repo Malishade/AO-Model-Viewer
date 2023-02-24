@@ -123,17 +123,24 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
     public void ExportDataModel(ListViewDataModel dataModel, string path)
     {
+        string texName = Names.TryGetValue(dataModel.ResourceType, out var resourceNames) && resourceNames.TryGetValue(dataModel.Id, out string rdbName) ? rdbName.Trim('\0') : $"UnnamedTex_{dataModel.Id}.png";
+
         switch (dataModel.ResourceType)
         {
             case ResourceTypeId.Texture:
-                string texName = Names[ResourceTypeId.Texture].TryGetValue(dataModel.Id, out string rdbName) ? rdbName.Trim('\0') : $"UnnamedTex_{dataModel.Id}";
                 File.WriteAllBytes($"{Path.GetDirectoryName(path)}\\{texName}", _rdbController.Get<AOTexture>(dataModel.Id).JpgData);
                 break;
-            case (ResourceTypeId)1010008:
+            case ResourceTypeId.WallTexture:
+                File.WriteAllBytes($"{Path.GetDirectoryName(path)}\\{texName}", _rdbController.Get<WallTexture>(dataModel.Id).JpgData);
                 break;
-            case (ResourceTypeId)1010009:
+            case ResourceTypeId.SkinTexture:
+                File.WriteAllBytes($"{Path.GetDirectoryName(path)}\\{texName}", _rdbController.Get<SkinTexture>(dataModel.Id).JpgData);
                 break;
-            case (ResourceTypeId)1010011:
+            case ResourceTypeId.Icon:
+                File.WriteAllBytes($"{Path.GetDirectoryName(path)}\\{texName}", _rdbController.Get<IconTexture>(dataModel.Id).JpgData);
+                break;
+            case ResourceTypeId.GroundTexture:
+                File.WriteAllBytes($"{Path.GetDirectoryName(path)}\\{texName}", _rdbController.Get<GroundTexture>(dataModel.Id).JpgData);
                 break;
             default:
                 break;
@@ -311,7 +318,29 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         {
             Debug.Log($"Loading texture {texId}");
             Texture2D tex = new Texture2D(1, 1);
-            tex.LoadImage(_rdbController.Get<AOTexture>(type, texId).JpgData);
+            tex.LoadImage(_rdbController.Get<Image>(type, texId).JpgData);
+
+            mat = new Material(Shader.Find("Custom/AOShader"));
+            mat.mainTexture = tex;
+        }
+        catch
+        {
+            return null;
+        }
+
+        return mat;
+    }
+
+
+    public Material LoadGroundMaterial(ResourceTypeId type, int texId)
+    {
+        Material mat;
+
+        try
+        {
+            Debug.Log($"Loading ground texture {texId}");
+            Texture2D tex = new Texture2D(1, 1);
+            tex.LoadImage(_rdbController.Get<GroundTexture>(type, texId).JpgData);
 
             mat = new Material(Shader.Find("Custom/AOShader"));
             mat.mainTexture = tex;

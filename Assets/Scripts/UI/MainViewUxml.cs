@@ -34,9 +34,10 @@ public class MainViewUxml
         { "Models (.abiff)", ResourceTypeId.RdbMesh },
         //{ "Models2 (.abiff)", (ResourceTypeId)1010026 },
         { "Textures (.png)", ResourceTypeId.Texture },
-        //{ "Icons (.png)", (ResourceTypeId)1010008 },
-        //{ "Wall Textures (.png)", (ResourceTypeId)1010009 },
-        //{ "Skin Textures (.png)", (ResourceTypeId)1010011 }
+        { "Icons (.png)", ResourceTypeId.Icon },
+        { "Wall Textures (.png)", ResourceTypeId.WallTexture },
+        { "Skin Textures (.png)", ResourceTypeId.SkinTexture },
+        { "Ground Textures (.png)", ResourceTypeId.GroundTexture },
         //{ "Characters (.cir)", ResourceTypeId.RdbMesh },
     };
     private VisualElement _modelViewerContainer;
@@ -70,7 +71,7 @@ public class MainViewUxml
         if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
             defaultName = defaultName.Replace(".abiff", ".fbx");
 
-        StandaloneFileBrowser.SaveFilePanelAsync("Export Resource", null, Path.GetFileNameWithoutExtension(defaultName), Path.GetExtension(defaultName).Substring(1), (path) =>
+        StandaloneFileBrowser.SaveFilePanelAsync("Export Resource", null, Path.GetFileNameWithoutExtension(defaultName), Path.GetExtension(defaultName).TrimStart('.'), (path) =>
         {
             if (string.IsNullOrEmpty(path))
                 return;
@@ -109,6 +110,10 @@ public class MainViewUxml
                 RDBLoader.Instance.ExportMesh(dataModel.Id, path);
                 break;
             case ResourceTypeId.Texture:
+            case ResourceTypeId.SkinTexture:
+            case ResourceTypeId.WallTexture:
+            case ResourceTypeId.Icon:
+            case ResourceTypeId.GroundTexture:
                 RDBLoader.Instance.ExportDataModel(dataModel, path);
                 break;
             default:
@@ -145,11 +150,15 @@ public class MainViewUxml
                 MaterialChangeAction(_activeMatTypeId);
                 break;
             case ResourceTypeId.Texture:
-            case (ResourceTypeId)1010008:
-            case (ResourceTypeId)1010009:
-            case (ResourceTypeId)1010011:
+            case ResourceTypeId.WallTexture:
+            case ResourceTypeId.SkinTexture:
+            case ResourceTypeId.Icon:
                 var rdbMat = RDBLoader.Instance.LoadMaterialOld(selectedEntry.ResourceType, selectedEntry.Id);
                 _modelViewer.InitUpdateRdbTexture(rdbMat);
+                break;
+            case ResourceTypeId.GroundTexture:
+                var groundMat = RDBLoader.Instance.LoadGroundMaterial(selectedEntry.ResourceType, selectedEntry.Id);
+                _modelViewer.InitUpdateRdbTexture(groundMat);
                 break;
         }
     }
