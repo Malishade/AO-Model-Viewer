@@ -68,8 +68,17 @@ public class MainViewUxml
 
         string defaultName = selectedEntry.Name.Trim('\0');
 
-        if (selectedEntry.ResourceType == ResourceTypeId.RdbMesh)
-            defaultName = defaultName.Replace(".abiff", ".fbx");
+
+        switch (selectedEntry.ResourceType)
+        {
+            case ResourceTypeId.RdbMesh:
+                defaultName = defaultName.Replace(".abiff", ".fbx");
+                break;
+            case ResourceTypeId.WallTexture:
+            case ResourceTypeId.GroundTexture:
+                defaultName += ".png";
+                break;
+        }
 
         StandaloneFileBrowser.SaveFilePanelAsync("Export Resource", null, Path.GetFileNameWithoutExtension(defaultName), Path.GetExtension(defaultName).TrimStart('.'), (path) =>
         {
@@ -285,7 +294,23 @@ public class MainViewUxml
         _fileDropdownMenu.AppendAction($"Exit", ExitClicked, DropdownMenuAction.AlwaysEnabled);
     }
 
-    private DropdownMenuAction.Status IsTextureResourceTypeOpen(DropdownMenuAction arg) => RDBLoader.Instance.IsOpen && ((ListViewDataModel)_listView.itemsSource[0]).ResourceType == ResourceTypeId.Texture ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
+    private DropdownMenuAction.Status IsTextureResourceTypeOpen(DropdownMenuAction arg)
+    {
+        if (!RDBLoader.Instance.IsOpen)
+            return DropdownMenuAction.Status.Disabled;
+
+        switch (((ListViewDataModel)_listView.itemsSource[0]).ResourceType)
+        {
+            case ResourceTypeId.Texture:
+            case ResourceTypeId.Icon:
+            case ResourceTypeId.WallTexture:
+            case ResourceTypeId.SkinTexture:
+            case ResourceTypeId.GroundTexture:
+                return DropdownMenuAction.Status.Normal;
+            default:
+                return DropdownMenuAction.Status.Disabled;
+        }
+    }
 
     private DropdownMenuAction.Status IsRdbOpen(DropdownMenuAction e) => RDBLoader.Instance.IsOpen ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled;
 

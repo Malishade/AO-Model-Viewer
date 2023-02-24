@@ -573,8 +573,12 @@ padding-top: 7px;
     background-color: var(--gray125);
 }
 
-
 #SearchBarClear:active:hover:focus {
     background-color: var(--lime);
     color: var(--light-lime);
 }
+
+#ResourceTypeSelector > .unity-popup-field__label {
+    min-width: 125px;
+}
+
