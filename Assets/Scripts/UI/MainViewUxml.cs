@@ -26,6 +26,10 @@ public class MainViewUxml
     private Label _resultsLabel;
     private TextField _searchBarTextField;
     private Button _searchBarClearButton;
+    private OrderName _currentName;
+    private OrderType _currentType;
+    private string _currentQuery = "";
+
     private ResourceTypeId _activeResourceTypeId = ResourceTypeId.RdbMesh;
     private MaterialTypeId _activeMatTypeId;
     private Foldout _modelInspectorFoldout;
@@ -41,6 +45,7 @@ public class MainViewUxml
         //{ "Characters (.cir)", ResourceTypeId.RdbMesh },
     };
     private VisualElement _modelViewerContainer;
+
     public MainViewUxml(VisualElement root, ModelViewer modelViewer)
     {
         _settings = SettingsManager.Instance.Settings;
@@ -50,6 +55,7 @@ public class MainViewUxml
 
         root.AddManipulator(new ContextualMenuManipulator());
 
+        InitOrderByButtons(root);
         InitRightContainer(root);
         InitListView(root);
         InitTypeDropdown(root);
@@ -57,6 +63,12 @@ public class MainViewUxml
         InitSearchBar(root);
         InitModelInspector(root);
         FixScrollSpeed();
+    }
+
+    private void InitOrderByButtons(VisualElement root)
+    {
+        root.Q<Button>("OrderByIdButton").RegisterCallback<ClickEvent>(OrderByIdCallback);
+        root.Q<Button>("OrderByNameButton").RegisterCallback<ClickEvent>(OrderByNameCallback);
     }
 
     private void ExportClicked(DropdownMenuAction obj)
@@ -216,7 +228,8 @@ public class MainViewUxml
 
     private void TextUpdate(ChangeEvent<string> evt)
     {
-        PopulateListView(evt.newValue);
+        _currentQuery = evt.newValue;
+        PopulateListView(_currentQuery);
     }
 
     private void InitListView(VisualElement root)
@@ -229,7 +242,16 @@ public class MainViewUxml
         _listView.onSelectionChange += OnEntryClicked;
         _listView.makeItem = () =>
         {
-            Label newListEntry = new Label();
+            VisualElement newListEntry = new VisualElement();
+
+            Label idLabel = new Label();
+            idLabel.style.minWidth = 60;
+            Label nameLabel = new Label();
+
+            newListEntry.Add(idLabel);
+            newListEntry.Add(nameLabel);
+
+            newListEntry.style.flexDirection = FlexDirection.Row;
             newListEntry.userData = newListEntry;
 
             return newListEntry;
@@ -417,7 +439,9 @@ public class MainViewUxml
         _listView.itemsSource = listViewData;
         _listView.bindItem = (item, index) =>
         {
-            (item.userData as Label).text = listViewData[index].Name;
+            var root = (VisualElement)item.userData;
+            (root.ElementAt(0) as Label).text = listViewData[index].Id.ToString();
+            (root.ElementAt(1) as Label).text = listViewData[index].Name.ToString();
         };
 
         _resultsLabel.text = listViewData.Count().ToString();
@@ -429,16 +453,37 @@ public class MainViewUxml
 
         Dictionary<int, string> names;
 
-        if(!RDBLoader.Instance.Names.TryGetValue(_activeResourceTypeId, out names))
+        if (!RDBLoader.Instance.Names.TryGetValue(_activeResourceTypeId, out names))
         {
             names = RDBLoader.Instance.Records[_activeResourceTypeId].ToDictionary(x => x, x => $"UnnamedRecord_{x}");
         }
+
+        switch (_currentName)
+        {
+            case OrderName.Name:
+                if (_currentType == OrderType.Ascending)
+                    names = names.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+                else if (_currentType == OrderType.Descending)
+                    names = names.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+                break;
+            case OrderName.Id:
+                if (_currentType == OrderType.Ascending)
+                {
+                    // this is by default
+                }
+                else if (_currentType == OrderType.Descending)
+                {
+                    names = names.OrderByDescending(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+                }
+                break;
+        }
+
 
 
         if (query == "")
         {
             foreach (var rdbKeyValue in names)
-                listViewData.Add(new ListViewDataModel { ResourceType=_activeResourceTypeId, Id = rdbKeyValue.Key, Name = rdbKeyValue.Value });
+                listViewData.Add(new ListViewDataModel { ResourceType = _activeResourceTypeId, Id = rdbKeyValue.Key, Name = rdbKeyValue.Value });
 
         }
         else
@@ -453,6 +498,34 @@ public class MainViewUxml
         }
 
         return listViewData;
+    }
+
+    private void OrderByIdCallback(ClickEvent evt)
+    {
+        _currentType = _currentName == OrderName.Name ? OrderType.Ascending : _currentType == OrderType.Ascending ? OrderType.Descending : OrderType.Ascending;
+        _currentName = OrderName.Id;
+
+        PopulateListView(_currentQuery);
+    }
+
+    private void OrderByNameCallback(ClickEvent evt)
+    {
+        _currentType = _currentName == OrderName.Id ? OrderType.Ascending : _currentType == OrderType.Ascending ? OrderType.Descending : OrderType.Ascending;
+        _currentName = OrderName.Name;
+
+        PopulateListView(_currentQuery);
+    }
+
+    internal enum OrderName
+    {
+        Id,
+        Name,
+    }
+
+    internal enum OrderType
+    {
+        Ascending,
+        Descending
     }
 
     private void RegisterListViewPointerEvents()

@@ -180,6 +180,10 @@ public class CurrentModelData
         }
 
         Renderer[] renderers = GameObjectRoot.transform.GetComponentsInChildren<Renderer>();
+
+        if (renderers.Length == 0)
+            return;
+
         Bounds bounds = renderers[0].bounds;
 
         foreach (Renderer renderer in renderers)

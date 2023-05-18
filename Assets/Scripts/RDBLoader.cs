@@ -292,7 +292,11 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
             int diffuseId = material.GetNonTextureProperty("DiffuseId").GetIntegerValue();
             Debug.Log($"Loading diffuse texture {diffuseId}");
             Texture2D diffuseTex = new Texture2D(1, 1);
-            diffuseTex.LoadImage(_rdbController.Get<AOTexture>(diffuseId).JpgData);
+
+            var jpegData = _rdbController.Get<AOTexture>(diffuseId)?.JpgData;
+
+            if (jpegData != null)
+                diffuseTex.LoadImage(jpegData);
 
             aoMat.mainTexture = diffuseTex;
         }
