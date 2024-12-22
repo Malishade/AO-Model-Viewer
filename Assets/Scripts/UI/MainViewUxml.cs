@@ -310,7 +310,7 @@ public class MainViewUxml
         _fileDropdownMenu.AppendSeparator();
         //_fileDropdownMenu.AppendAction("Import", ImportClicked, DropdownMenuAction.AlwaysEnabled);
         _fileDropdownMenu.AppendAction("Export", ExportClicked, IsRdbOpen);
-        _fileDropdownMenu.AppendAction("Export All", ExportAll, IsTextureResourceTypeOpen);
+        _fileDropdownMenu.AppendAction("Export All", ExportAll, IsRdbOpen);
 
         _fileDropdownMenu.AppendSeparator();
         _fileDropdownMenu.AppendAction($"Exit", ExitClicked, DropdownMenuAction.AlwaysEnabled);
