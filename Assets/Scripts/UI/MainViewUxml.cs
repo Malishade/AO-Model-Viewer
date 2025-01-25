@@ -490,7 +490,7 @@ public class MainViewUxml
         {
             foreach (var rdbKeyValue in names)
             {
-                if (!rdbKeyValue.Value.Contains(query))
+                if (!rdbKeyValue.Value.Contains(query) && !rdbKeyValue.Key.ToString().Contains(query))
                     continue;
 
                 listViewData.Add(new ListViewDataModel { ResourceType = _activeResourceTypeId, Id = rdbKeyValue.Key, Name = rdbKeyValue.Value });

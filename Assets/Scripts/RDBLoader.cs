@@ -18,6 +18,8 @@ using Assimp.Unmanaged;
 using static AODB.Common.DbClasses.RDBMesh_t.FAFAnim_t;
 using AODB.Common.RDBObjects;
 using static MainViewUxml;
+using Transform = UnityEngine.Transform;
+using Animation = UnityEngine.Animation;
 
 [CreateAssetMenu]
 public class RDBLoader : ScriptableSingleton<RDBLoader>
@@ -74,7 +76,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         try
         {
             RDBMesh mesh = _rdbController.Get<RDBMesh>(meshId);
-            scene = AbiffConverter.ToAssimpScene(mesh.RDBMesh_t, out _);
+            scene = AbiffConverter.ToAssimpScene(mesh.RDBMesh_t, out _, out _, out _);
 
             foreach (AMaterial mat in scene.Materials)
             {
@@ -112,6 +114,13 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
             return;
         }
 
+        //Scale x100 and flip on x axis for correct transforms
+        foreach (var s in scene.RootNode.Children)
+            s.Transform = new Assimp.Matrix4x4(
+            -100f, 0, 0, 0,
+            0, 100f, 0, 0,
+            0, 0, 100f, 0,
+            0, 0, 0, 1);
         new AssimpContext().ExportFile(scene, path, "fbx");
     }
 
@@ -185,26 +194,103 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
     public GameObject CreateAbiffMesh(ResourceTypeId type, int meshId)
     {
         Dictionary<int, UVKey[]> uvAnims;
+        Dictionary<string, List<QuaternionKey>> rotKeys;
+        Dictionary<string, List<VectorKey>> transKeys;
         Scene scene;
 
         try
         {
-            Debug.Log($"Loading mesh {meshId}");
+            Debug.Log($"Loading mesh {meshId} {type}");
 
             RDBMesh rdbMesh;
 
-            rdbMesh = type == ResourceTypeId.RdbMesh ? _rdbController.Get<RDBMesh>(meshId) : _rdbController.Get<RDBMesh2>(meshId);
-            scene = AbiffConverter.ToAssimpScene(rdbMesh.RDBMesh_t, out uvAnims);
+            rdbMesh = type == ResourceTypeId.RdbMesh ? _rdbController.Get<RDBMesh>(meshId) : _rdbController.Get<RDBMesh2>(meshId); 
+            
+            scene = AbiffConverter.ToAssimpScene(rdbMesh.RDBMesh_t, out uvAnims, out transKeys, out rotKeys);
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.Log(ex.Message);
             return null;
         }
 
-        return CreateNode(scene, scene.RootNode, uvAnims);
+        var rootNode = CreateNode(scene, scene.RootNode, uvAnims, transKeys, rotKeys);
+
+        if (transKeys.Count != 0)
+        {
+            AnimationClip animClip = new AnimationClip();
+            animClip.legacy = true;
+            animClip.wrapMode = WrapMode.Loop;
+
+            animClip.name = $"Anim_{meshId}";
+
+            foreach (var rotKey in rotKeys)
+            {
+                animClip.SetCurve(FindChildPath(rootNode.transform, rotKey.Key), typeof(Transform), "localRotation.x", new AnimationCurve(rotKey.Value.Select(x => new Keyframe((float)x.Time, x.Value.X)).ToArray()));
+                animClip.SetCurve(FindChildPath(rootNode.transform, rotKey.Key), typeof(Transform), "localRotation.y", new AnimationCurve(rotKey.Value.Select(x => new Keyframe((float)x.Time, x.Value.Y)).ToArray()));
+                animClip.SetCurve(FindChildPath(rootNode.transform, rotKey.Key), typeof(Transform), "localRotation.z", new AnimationCurve(rotKey.Value.Select(x => new Keyframe((float)x.Time, x.Value.Z)).ToArray()));
+                animClip.SetCurve(FindChildPath(rootNode.transform, rotKey.Key), typeof(Transform), "localRotation.w", new AnimationCurve(rotKey.Value.Select(x => new Keyframe((float)x.Time, x.Value.W)).ToArray()));
+            }
+
+            foreach (var transKey in transKeys)
+            {
+                animClip.SetCurve(FindChildPath(rootNode.transform, transKey.Key), typeof(Transform), "localPosition.x", new AnimationCurve(transKey.Value.Select(x => new Keyframe((float)x.Time, x.Value.X)).ToArray()));
+                animClip.SetCurve(FindChildPath(rootNode.transform, transKey.Key), typeof(Transform), "localPosition.y", new AnimationCurve(transKey.Value.Select(x => new Keyframe((float)x.Time, x.Value.Y)).ToArray()));
+                animClip.SetCurve(FindChildPath(rootNode.transform, transKey.Key), typeof(Transform), "localPosition.z", new AnimationCurve(transKey.Value.Select(x => new Keyframe((float)x.Time, x.Value.Z)).ToArray()));
+            }
+
+            var anim = rootNode.AddComponent<Animation>();
+            anim.clip = animClip;
+            anim.AddClip(animClip, animClip.name);
+            anim.Play();
+        }
+
+
+        return rootNode;
+    }
+    public string FindChildPath(Transform parent, string childName)
+    {
+        Transform target = FindChildRecursive(parent, childName);
+        if (target != null)
+        {
+            return GetPathToRoot(target, parent);
+        }
+        return null;
     }
 
-    private GameObject CreateNode(Scene scene, Node node, Dictionary<int, UVKey[]> uvAnims)
+    private Transform FindChildRecursive(Transform parent, string childName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == childName)
+            {
+                return child;
+            }
+
+            Transform found = FindChildRecursive(child, childName);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+        return null;
+    }
+
+    private string GetPathToRoot(Transform child, Transform root)
+    {
+        string path = child.name;
+        Transform current = child;
+
+        while (current.parent != null && current.parent != root)
+        {
+            current = current.parent;
+            path = current.name + "/" + path;
+        }
+
+        return path;
+    }
+
+    private GameObject CreateNode(Scene scene, Node node, Dictionary<int, UVKey[]> uvAnims, Dictionary<string, List<VectorKey>> transKeys, Dictionary<string, List<QuaternionKey>> rotKeys)
     {
         GameObject nodeObj = new GameObject(node.Name);
 
@@ -213,7 +299,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
         nodeObj.transform.rotation = new UnityEngine.Quaternion(rotation.X, rotation.Y, rotation.Z, rotation.W);
         nodeObj.transform.position = new Vector3(position.X, position.Y, position.Z);
 
-        if(node.HasMeshes)
+        if (node.HasMeshes)
         {
             foreach (var meshIdx in node.MeshIndices)
             {
@@ -226,7 +312,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
                 submeshObj.AddComponent<MeshRenderer>().material = LoadMaterial(material);
                 submeshObj.transform.SetParent(nodeObj.transform, false);
 
-                if (uvAnims.TryGetValue(meshIdx, out UVKey[] uvAnim))
+                if (uvAnims.TryGetValue(meshIdx, out UVKey[] uvAnim) && uvAnim != null)
                 {
                     submeshObj.AddComponent<UVAnimation>().Init(uvAnim);
                 }
@@ -235,7 +321,7 @@ public class RDBLoader : ScriptableSingleton<RDBLoader>
 
         foreach (Node child in node.Children)
         {
-            GameObject childObj = CreateNode(scene, child, uvAnims);
+            GameObject childObj = CreateNode(scene, child, uvAnims, transKeys, rotKeys);
             childObj.transform.SetParent(nodeObj.transform, false);
         }
 
