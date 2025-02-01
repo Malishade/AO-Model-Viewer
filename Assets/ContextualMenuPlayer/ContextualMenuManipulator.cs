@@ -97,7 +97,7 @@ namespace ContextualMenuPlayer
         private void OnMouseDownEventOSX(MouseDownEvent evt)
         {
             DisplayMenuHandledOSX = false;
-            if (!evt.isDefaultPrevented)
+            if (!evt.isPropagationStopped)
             {
                 OnMouseUpDownEvent(evt);
             }
@@ -115,7 +115,7 @@ namespace ContextualMenuPlayer
         {
             m_ContextualMenuManager.DisplayMenu(evt, evt.target);
             evt.StopPropagation();
-            evt.PreventDefault();
+       //     evt.PreventDefault();
         }
 
         private void CacheReflectionData()
