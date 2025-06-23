@@ -114,7 +114,7 @@ public class MainViewUxml
 
     private string SetResourceExportName(ResourceEntry entry)
     {
-        string defaultName = _resourceTableView.SelectedEntry.Name.Trim('\0');
+        string defaultName = entry.Name.Trim('\0');
 
         switch (entry.ResourceType)
         {

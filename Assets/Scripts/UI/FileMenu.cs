@@ -31,8 +31,8 @@ internal class FileMenu
         _fileDropdownMenu.AppendSeparator();
         _fileDropdownMenu.AppendAction($"Close Database", CloseClicked, CloseStatusCallback);
         _fileDropdownMenu.AppendSeparator();
-        _fileDropdownMenu.AppendAction("Export", ExportClicked, IsRdbOpen);
-        _fileDropdownMenu.AppendAction("Export All", ExportAll, IsRdbOpen);
+        _fileDropdownMenu.AppendAction("Export Selected", ExportClicked, IsRdbOpen);
+        _fileDropdownMenu.AppendAction("Export Active List", ExportAll, IsRdbOpen);
         _fileDropdownMenu.AppendSeparator();
         _fileDropdownMenu.AppendAction($"Info", InfoClicked, DropdownMenuAction.AlwaysEnabled);
         _fileDropdownMenu.AppendAction($"Exit", ExitClicked, DropdownMenuAction.AlwaysEnabled);

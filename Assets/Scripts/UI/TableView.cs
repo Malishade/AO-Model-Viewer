@@ -15,7 +15,10 @@ public class TableView
     protected MultiColumnListView McListView;
 
     private List<ResourceEntry> _currentResources;
-    public ReadOnlyCollection<ResourceEntry> Resources => _currentResources.AsReadOnly();
+
+    public List<ResourceEntry> Resources => McListView.itemsSource as List<ResourceEntry>;
+
+    // public ReadOnlyCollection<ResourceEntry> Resources => _currentResources.AsReadOnly();
 
 
     public TableView(MultiColumnListView multiColumnListView)
